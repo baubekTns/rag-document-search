@@ -10,8 +10,8 @@ A Retrieval-Augmented Generation (RAG) application that allows users to upload d
 
 - [x] Repository initialized
 - [x] Project roadmap defined
-- [ ] Backend service setup
-- [ ] Frontend service setup
+- [x] Backend service setup
+- [x] Frontend service setup
 - [ ] Docker environment
 
 ### Phase 2: Document Ingestion

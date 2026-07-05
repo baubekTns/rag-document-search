@@ -9,9 +9,16 @@ export interface DocumentMetadata {
   uploaded_at: string;
 }
 
+export interface ChunkingMetadata {
+  chunk_count: number;
+  chunk_size: number;
+  chunk_overlap: number;
+}
+
 export interface UploadResponse {
   message: string;
   document: DocumentMetadata;
+  chunking: ChunkingMetadata;
   text_preview: string;
 }
 

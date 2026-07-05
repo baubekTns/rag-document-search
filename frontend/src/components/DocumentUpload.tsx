@@ -46,7 +46,7 @@ export default function DocumentUpload() {
       const result = await uploadDocument(selectedFile);
 
       setUploadResult(result);
-      setMessage("PDF uploaded successfully.");
+      setMessage("PDF uploaded and chunked successfully.");
     } catch (error) {
       const errorMessage =
         error instanceof Error
@@ -90,6 +90,21 @@ export default function DocumentUpload() {
 
           <p>
             <strong>Characters:</strong> {uploadResult.document.character_count}
+          </p>
+
+          <h3>Chunking</h3>
+
+          <p>
+            <strong>Chunks:</strong> {uploadResult.chunking.chunk_count}
+          </p>
+
+          <p>
+            <strong>Chunk size:</strong> {uploadResult.chunking.chunk_size}
+          </p>
+
+          <p>
+            <strong>Chunk overlap:</strong>{" "}
+            {uploadResult.chunking.chunk_overlap}
           </p>
 
           <h3>Text Preview</h3>

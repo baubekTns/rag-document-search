@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
+from app.services.chunk_metadata_service import create_document_chunks
 from app.services.document_metadata_service import create_document_metadata
 from app.services.file_validation_service import (
     MAX_FILE_SIZE_BYTES,
@@ -10,11 +11,15 @@ from app.services.file_validation_service import (
     validate_pdf_upload,
 )
 from app.services.pdf_service import extract_pdf_text
+from app.services.text_chunking_service import chunk_text
 
 router = APIRouter()
 
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
+
+CHUNK_SIZE = 1000
+CHUNK_OVERLAP = 200
 
 
 @router.post("/upload")
@@ -54,9 +59,25 @@ async def upload_pdf(file: UploadFile = File(...)):
             character_count=extraction["characters"],
         )
 
+        chunks = chunk_text(
+            extraction["text"],
+            chunk_size=CHUNK_SIZE,
+            chunk_overlap=CHUNK_OVERLAP,
+        )
+
+        chunk_records = create_document_chunks(
+            document_id=document_id,
+            chunks=chunks,
+        )
+
         return {
-            "message": "PDF uploaded, text extracted, and metadata stored successfully",
+            "message": "PDF uploaded, text extracted, metadata stored, and text chunked successfully",
             "document": document_metadata,
+            "chunking": {
+                "chunk_count": len(chunk_records),
+                "chunk_size": CHUNK_SIZE,
+                "chunk_overlap": CHUNK_OVERLAP,
+            },
             "text_preview": extraction["text_preview"],
         }
 

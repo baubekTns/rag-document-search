@@ -21,12 +21,15 @@ A Retrieval-Augmented Generation (RAG) application that allows users to upload d
 - [x] Document metadata storage
 - [x] Error handling and validation
 
-### Phase 3: Semantic Search
+### Phase 3: Search Foundation
 
-- [ ] Text chunking
+- [x] Text chunking
+- [ ] Chunk metadata storage
+- [ ] Keyword search index
 - [ ] Embedding generation
 - [ ] Vector storage
 - [ ] Similarity search
+- [ ] Re-ranking
 
 ### Phase 4: Question Answering
 

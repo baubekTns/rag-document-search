@@ -3,6 +3,7 @@
 .LSOverride
 
 backend/uploads
+backend/data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,17 +1,32 @@
 import { useState } from "react";
 import { uploadDocument } from "../services/documentService";
+import type { UploadResponse } from "../types/document";
 
 export default function DocumentUpload() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
   const [uploading, setUploading] = useState(false);
-
   const [message, setMessage] = useState("");
+  const [uploadResult, setUploadResult] = useState<UploadResponse | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
-    if (!file) return;
+    setUploadResult(null);
+
+    if (!file) {
+      setSelectedFile(null);
+      setMessage("");
+      return;
+    }
+
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
+      setSelectedFile(null);
+      setMessage("Please select a PDF file.");
+      return;
+    }
 
     setSelectedFile(file);
     setMessage("");
@@ -19,34 +34,68 @@ export default function DocumentUpload() {
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      setMessage("Please select a PDF.");
+      setMessage("Please select a PDF file first.");
       return;
     }
 
     try {
       setUploading(true);
+      setMessage("");
+      setUploadResult(null);
 
       const result = await uploadDocument(selectedFile);
 
-      setMessage(`Uploaded: ${result.filename}`);
-    } catch {
-      setMessage("Upload failed.");
+      setUploadResult(result);
+      setMessage("PDF uploaded successfully.");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Upload failed. Please try again.";
+
+      setMessage(errorMessage);
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <div>
+    <section>
       <h2>Upload Document</h2>
 
-      <input type="file" accept=".pdf" onChange={handleFileChange} />
+      <input
+        type="file"
+        accept="application/pdf,.pdf"
+        onChange={handleFileChange}
+        disabled={uploading}
+      />
 
-      <button onClick={handleUpload} disabled={uploading}>
+      <button onClick={handleUpload} disabled={uploading || !selectedFile}>
         {uploading ? "Uploading..." : "Upload"}
       </button>
 
       {message && <p>{message}</p>}
-    </div>
+
+      {uploadResult && (
+        <div>
+          <h3>Document Metadata</h3>
+
+          <p>
+            <strong>Filename:</strong> {uploadResult.document.original_filename}
+          </p>
+
+          <p>
+            <strong>Pages:</strong> {uploadResult.document.page_count}
+          </p>
+
+          <p>
+            <strong>Characters:</strong> {uploadResult.document.character_count}
+          </p>
+
+          <h3>Text Preview</h3>
+          <p>{uploadResult.text_preview}</p>
+        </div>
+      )}
+    </section>
   );
 }

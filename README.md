@@ -19,7 +19,7 @@ A Retrieval-Augmented Generation (RAG) application that allows users to upload d
 - [x] PDF upload endpoint
 - [x] PDF text extraction
 - [x] Document metadata storage
-- [ ] Error handling and validation
+- [x] Error handling and validation
 
 ### Phase 3: Semantic Search
 

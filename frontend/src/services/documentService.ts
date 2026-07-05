@@ -1,20 +1,22 @@
-import type { UploadResponse } from "../types/document";
+import type { ApiErrorResponse, UploadResponse } from "../types/document";
 
 const API_BASE_URL = "http://localhost:8000";
 
 export async function uploadDocument(file: File): Promise<UploadResponse> {
   const formData = new FormData();
-
   formData.append("file", file);
 
-  const response = await fetch(`${API_BASE_URL}/uploadfile/`, {
+  const response = await fetch(`${API_BASE_URL}/upload`, {
     method: "POST",
     body: formData,
   });
 
+  const data = await response.json();
+
   if (!response.ok) {
-    throw new Error("Upload failed");
+    const errorData = data as ApiErrorResponse;
+    throw new Error(errorData.detail || "Upload failed");
   }
 
-  return response.json();
+  return data as UploadResponse;
 }

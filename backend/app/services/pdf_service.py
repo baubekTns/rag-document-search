@@ -1,10 +1,17 @@
 from pathlib import Path
 
+from fastapi import HTTPException
 from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
 
 def extract_pdf_text(file_path: Path) -> dict:
-    reader = PdfReader(str(file_path))
+    try:
+        reader = PdfReader(str(file_path))
+    except PdfReadError:
+        raise HTTPException(status_code=400, detail="Uploaded PDF could not be read")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid or corrupted PDF file")
 
     pages_text: list[str] = []
 
@@ -13,6 +20,12 @@ def extract_pdf_text(file_path: Path) -> dict:
         pages_text.append(text.strip())
 
     full_text = "\n\n".join(pages_text).strip()
+
+    if not full_text:
+        raise HTTPException(
+            status_code=400,
+            detail="No extractable text found in this PDF. It may be scanned or image-based.",
+        )
 
     return {
         "pages": len(reader.pages),

@@ -5,6 +5,8 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.services.chunk_metadata_service import create_document_chunks
 from app.services.document_metadata_service import create_document_metadata
+from app.services.embedding_metadata_service import create_chunk_embeddings
+from app.services.embedding_service import EMBEDDING_MODEL_NAME, generate_embeddings
 from app.services.file_validation_service import (
     MAX_FILE_SIZE_BYTES,
     sanitize_filename,
@@ -70,13 +72,29 @@ async def upload_pdf(file: UploadFile = File(...)):
             chunks=chunks,
         )
 
+        embeddings = generate_embeddings(chunks)
+
+        embedding_records = create_chunk_embeddings(
+            document_id=document_id,
+            chunk_records=chunk_records,
+            embeddings=embeddings,
+            model_name=EMBEDDING_MODEL_NAME,
+        )
+
         return {
-            "message": "PDF uploaded, text extracted, metadata stored, and text chunked successfully",
+            "message": "PDF uploaded, text extracted, chunked, indexed, and embedded successfully",
             "document": document_metadata,
             "chunking": {
                 "chunk_count": len(chunk_records),
                 "chunk_size": CHUNK_SIZE,
                 "chunk_overlap": CHUNK_OVERLAP,
+            },
+            "embeddings": {
+                "embedding_count": len(embedding_records),
+                "model_name": EMBEDDING_MODEL_NAME,
+                "embedding_dimension": embedding_records[0]["embedding_dimension"]
+                if embedding_records
+                else 0,
             },
             "text_preview": extraction["text_preview"],
         }

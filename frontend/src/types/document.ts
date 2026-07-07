@@ -15,10 +15,17 @@ export interface ChunkingMetadata {
   chunk_overlap: number;
 }
 
+export interface EmbeddingMetadata {
+  embedding_count: number;
+  model_name: string;
+  embedding_dimension: number;
+}
+
 export interface UploadResponse {
   message: string;
   document: DocumentMetadata;
   chunking: ChunkingMetadata;
+  embeddings: EmbeddingMetadata;
   text_preview: string;
 }
 

@@ -26,7 +26,8 @@ A Retrieval-Augmented Generation (RAG) application that allows users to upload d
 - [x] Text chunking
 - [x] Chunk metadata storage
 - [x] Keyword search index
-- [ ] Embedding generation
+- [x] Embedding generation
+- [ ] Production embedding model
 - [ ] Vector storage
 - [ ] Similarity search
 - [ ] Re-ranking

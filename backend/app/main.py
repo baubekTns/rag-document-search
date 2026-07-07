@@ -9,6 +9,7 @@ from app.services.chunk_metadata_service import (
     initialize_document_chunks_table,
 )
 from app.services.document_metadata_service import initialize_document_metadata_table
+from app.services.embedding_metadata_service import initialize_chunk_embeddings_table
 
 app = FastAPI()
 
@@ -23,6 +24,7 @@ app.add_middleware(
 initialize_document_metadata_table()
 initialize_document_chunks_table()
 initialize_chunk_keyword_index()
+initialize_chunk_embeddings_table()
 
 app.include_router(upload_router)
 app.include_router(documents_router)

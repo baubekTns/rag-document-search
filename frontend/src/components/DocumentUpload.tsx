@@ -102,6 +102,22 @@ export default function DocumentUpload() {
             <strong>Chunk size:</strong> {uploadResult.chunking.chunk_size}
           </p>
 
+          <h3>Embeddings</h3>
+
+          <p>
+            <strong>Embeddings:</strong>{" "}
+            {uploadResult.embeddings.embedding_count}
+          </p>
+
+          <p>
+            <strong>Model:</strong> {uploadResult.embeddings.model_name}
+          </p>
+
+          <p>
+            <strong>Dimension:</strong>{" "}
+            {uploadResult.embeddings.embedding_dimension}
+          </p>
+
           <p>
             <strong>Chunk overlap:</strong>{" "}
             {uploadResult.chunking.chunk_overlap}

@@ -79,8 +79,26 @@ def create_document_chunks(
             ],
         )
 
-    return chunk_records
+        connection.executemany(
+            """
+            INSERT INTO document_chunks_fts (
+                chunk_id,
+                document_id,
+                chunk_text
+            )
+            VALUES (?, ?, ?)
+            """,
+            [
+                (
+                    record["id"],
+                    record["document_id"],
+                    record["chunk_text"],
+                )
+                for record in chunk_records
+            ],
+        )
 
+    return chunk_records
 
 def list_chunk_previews_for_document(
     document_id: str,
@@ -140,3 +158,60 @@ def get_chunk_by_id(document_id: str, chunk_id: str) -> dict[str, Any] | None:
         return None
 
     return dict(row)
+
+def initialize_chunk_keyword_index() -> None:
+    with get_connection() as connection:
+        connection.execute(
+            """
+            CREATE VIRTUAL TABLE IF NOT EXISTS document_chunks_fts
+            USING fts5(
+                chunk_id UNINDEXED,
+                document_id UNINDEXED,
+                chunk_text
+            )
+            """
+        )
+
+def search_chunks_by_keyword(
+    *,
+    query: str,
+    document_id: str | None = None,
+    limit: int = 10,
+    preview_length: int = 250,
+) -> list[dict[str, Any]]:
+    cleaned_query = query.strip()
+
+    if not cleaned_query:
+        return []
+
+    sql = """
+        SELECT
+            c.id,
+            c.document_id,
+            c.chunk_index,
+            c.character_count,
+            c.created_at,
+            snippet(document_chunks_fts, 2, '<mark>', '</mark>', '...', 20) AS snippet,
+            substr(c.chunk_text, 1, ?) AS preview
+        FROM document_chunks_fts
+        JOIN document_chunks c
+            ON c.id = document_chunks_fts.chunk_id
+        WHERE document_chunks_fts MATCH ?
+    """
+
+    params: list[Any] = [preview_length, cleaned_query]
+
+    if document_id is not None:
+        sql += " AND c.document_id = ?"
+        params.append(document_id)
+
+    sql += """
+        ORDER BY bm25(document_chunks_fts)
+        LIMIT ?
+    """
+    params.append(limit)
+
+    with get_connection() as connection:
+        rows = connection.execute(sql, params).fetchall()
+
+    return [dict(row) for row in rows]

@@ -26,9 +26,15 @@ export interface UploadResponse {
   document: DocumentMetadata;
   chunking: ChunkingMetadata;
   embeddings: EmbeddingMetadata;
+  vector_storage: VectorStorageMetadata;
   text_preview: string;
 }
 
 export interface ApiErrorResponse {
   detail?: string;
+}
+
+export interface VectorStorageMetadata {
+  stored_vector_count: number;
+  collection_name: string;
 }

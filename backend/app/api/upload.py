@@ -14,6 +14,10 @@ from app.services.file_validation_service import (
 )
 from app.services.pdf_service import extract_pdf_text
 from app.services.text_chunking_service import chunk_text
+from app.services.vector_store_service import (
+    QDRANT_COLLECTION_NAME,
+    store_chunk_vectors,
+)
 
 router = APIRouter()
 
@@ -81,8 +85,15 @@ async def upload_pdf(file: UploadFile = File(...)):
             model_name=EMBEDDING_MODEL_NAME,
         )
 
+        vector_count = store_chunk_vectors(
+            document_id=document_id,
+            chunk_records=chunk_records,
+            embeddings=embeddings,
+            model_name=EMBEDDING_MODEL_NAME,
+        )
+
         return {
-            "message": "PDF uploaded, text extracted, chunked, indexed, and embedded successfully",
+            "message": "PDF uploaded, text extracted, chunked, indexed, embedded, and stored in vector database successfully",
             "document": document_metadata,
             "chunking": {
                 "chunk_count": len(chunk_records),
@@ -95,6 +106,10 @@ async def upload_pdf(file: UploadFile = File(...)):
                 "embedding_dimension": embedding_records[0]["embedding_dimension"]
                 if embedding_records
                 else 0,
+            },
+            "vector_storage": {
+                "stored_vector_count": vector_count,
+                "collection_name": QDRANT_COLLECTION_NAME,
             },
             "text_preview": extraction["text_preview"],
         }

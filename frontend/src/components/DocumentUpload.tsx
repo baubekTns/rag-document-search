@@ -123,6 +123,18 @@ export default function DocumentUpload() {
             {uploadResult.chunking.chunk_overlap}
           </p>
 
+          <h3>Vector Storage</h3>
+
+          <p>
+            <strong>Stored vectors:</strong>{" "}
+            {uploadResult.vector_storage.stored_vector_count}
+          </p>
+
+          <p>
+            <strong>Collection:</strong>{" "}
+            {uploadResult.vector_storage.collection_name}
+          </p>
+
           <h3>Text Preview</h3>
           <p>{uploadResult.text_preview}</p>
         </div>

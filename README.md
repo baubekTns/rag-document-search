@@ -30,7 +30,7 @@ A Retrieval-Augmented Generation (RAG) application that allows users to upload d
 - [x] Production embedding model
 - [x] Vector storage
 - [x] Similarity search
-- [ ] Re-ranking
+- [x] Re-ranking
 
 ### Phase 4: Question Answering
 

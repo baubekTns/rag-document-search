@@ -1,20 +1,31 @@
-import hashlib
-import random
+from functools import lru_cache
+
+from fastembed import TextEmbedding
 
 
-EMBEDDING_MODEL_NAME = "mock-local-embedding-v1"
-EMBEDDING_DIMENSION = 384
+EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+
+
+@lru_cache(maxsize=1)
+def get_embedding_model() -> TextEmbedding:
+    return TextEmbedding(model_name=EMBEDDING_MODEL_NAME)
 
 
 def generate_embedding(text: str) -> list[float]:
-    seed = int(hashlib.sha256(text.encode("utf-8")).hexdigest(), 16)
-    random_generator = random.Random(seed)
+    model = get_embedding_model()
+    embeddings = list(model.embed([text]))
 
-    return [
-        random_generator.uniform(-1, 1)
-        for _ in range(EMBEDDING_DIMENSION)
-    ]
+    if not embeddings:
+        return []
+
+    return embeddings[0].tolist()
 
 
 def generate_embeddings(texts: list[str]) -> list[list[float]]:
-    return [generate_embedding(text) for text in texts]
+    if not texts:
+        return []
+
+    model = get_embedding_model()
+    embeddings = model.embed(texts)
+
+    return [embedding.tolist() for embedding in embeddings]

@@ -79,3 +79,53 @@ def store_chunk_vectors(
     )
 
     return len(points)
+
+
+def search_similar_chunks(
+    *,
+    query_embedding: list[float],
+    limit: int = 5,
+    document_id: str | None = None,
+) -> list[dict[str, Any]]:
+    client = get_qdrant_client()
+
+    query_filter = None
+
+    if document_id is not None:
+        from qdrant_client.models import FieldCondition, Filter, MatchValue
+
+        query_filter = Filter(
+            must=[
+                FieldCondition(
+                    key="document_id",
+                    match=MatchValue(value=document_id),
+                )
+            ]
+        )
+
+    search_response = client.query_points(
+        collection_name=QDRANT_COLLECTION_NAME,
+        query=query_embedding,
+        query_filter=query_filter,
+        limit=limit,
+        with_payload=True,
+    )
+
+    results = []
+
+    for point in search_response.points:
+        payload = point.payload or {}
+
+        results.append(
+            {
+                "score": point.score,
+                "chunk_id": payload.get("chunk_id"),
+                "document_id": payload.get("document_id"),
+                "chunk_index": payload.get("chunk_index"),
+                "character_count": payload.get("character_count"),
+                "model_name": payload.get("model_name"),
+                "text": payload.get("text"),
+            }
+        )
+
+    return results

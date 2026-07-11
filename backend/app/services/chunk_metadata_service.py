@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
+import re
 
 
 DATA_DIR = Path("data")
@@ -172,6 +173,38 @@ def initialize_chunk_keyword_index() -> None:
             """
         )
 
+def build_safe_fts_query(query: str) -> str:
+    stop_words = {
+        "the",
+        "and",
+        "for",
+        "with",
+        "what",
+        "when",
+        "where",
+        "why",
+        "how",
+        "who",
+        "does",
+        "this",
+        "that",
+        "from",
+        "into",
+        "before",
+        "after",
+        "about",
+    }
+
+    tokens = re.findall(r"[a-zA-Z0-9]+", query.lower())
+
+    tokens = [
+        token
+        for token in tokens
+        if len(token) > 2 and token not in stop_words
+    ]
+
+    return " OR ".join(tokens)
+
 def search_chunks_by_keyword(
     *,
     query: str,
@@ -179,7 +212,7 @@ def search_chunks_by_keyword(
     limit: int = 10,
     preview_length: int = 250,
 ) -> list[dict[str, Any]]:
-    cleaned_query = query.strip()
+    cleaned_query = build_safe_fts_query(query)
 
     if not cleaned_query:
         return []

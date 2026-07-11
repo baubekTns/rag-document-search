@@ -14,6 +14,8 @@ from app.services.embedding_metadata_service import initialize_chunk_embeddings_
 from app.services.vector_store_service import initialize_vector_collection
 from app.api.vector_store import router as vector_store_router
 
+from app.api.qa import router as qa_router
+
 app = FastAPI()
 
 app.add_middleware(
@@ -34,6 +36,7 @@ app.include_router(upload_router)
 app.include_router(documents_router)
 app.include_router(search_router)
 app.include_router(vector_store_router)
+app.include_router(qa_router)
 
 
 @app.get("/")

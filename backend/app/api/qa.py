@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query
 
 from app.services.rag_service import (
     build_context_text,
-    create_retrieval_preview_answer,
+    generate_rag_answer,
     retrieve_context_for_question,
 )
 
@@ -23,7 +23,7 @@ def answer_question(
         candidate_limit=candidate_limit,
     )
 
-    answer = create_retrieval_preview_answer(
+    answer = generate_rag_answer(
         question=q,
         context_chunks=context_chunks,
     )

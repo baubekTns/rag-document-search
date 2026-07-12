@@ -7,6 +7,8 @@ from app.services.chunk_metadata_service import (
     get_chunk_by_id,
     search_chunks_by_keyword,
 )
+from app.services.llm_service import generate_answer_with_ollama
+from app.services.prompt_service import build_rag_prompt
 
 
 DEFAULT_CANDIDATE_LIMIT = 20
@@ -116,3 +118,18 @@ def create_retrieval_preview_answer(
         "LLM answer generation has not been added yet, so this endpoint currently "
         "returns the retrieved sources that would be used to answer the question."
     )
+
+def generate_rag_answer(
+    *,
+    question: str,
+    context_chunks: list[dict[str, Any]],
+) -> str:
+    if not context_chunks:
+        return "I could not find relevant context in the uploaded documents."
+
+    prompt = build_rag_prompt(
+        question=question,
+        context_chunks=context_chunks,
+    )
+
+    return generate_answer_with_ollama(prompt)

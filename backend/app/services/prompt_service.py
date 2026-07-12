@@ -28,6 +28,7 @@ If the answer is not in the context, say exactly:
 
 Every factual sentence in your answer must cite at least one source using [Source 1], [Source 2], etc.
 Do not include information that is not supported by the sources.
+Keep the answer concise.
 
 Question:
 {question}

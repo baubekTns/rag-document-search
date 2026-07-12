@@ -133,3 +133,24 @@ def generate_rag_answer(
     )
 
     return generate_answer_with_ollama(prompt)
+
+def build_source_citations(context_chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    citations = []
+
+    for index, chunk in enumerate(context_chunks, start=1):
+        text = chunk.get("text") or ""
+
+        citations.append(
+            {
+                "source_number": index,
+                "document_id": chunk["document_id"],
+                "chunk_id": chunk["chunk_id"],
+                "chunk_index": chunk["chunk_index"],
+                "preview": text[:300],
+                "rerank_score": chunk.get("rerank_score"),
+                "semantic_score": chunk.get("semantic_score"),
+                "keyword_match": chunk.get("keyword_match"),
+            }
+        )
+
+    return citations

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { askQuestion } from "../services/qaService";
 import type { ChatMessage } from "../types/chat";
+import CitationViewer from "./CitationViewer";
 
 function createMessageId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -85,36 +86,7 @@ export default function ChatInterface() {
                 <strong>Reason:</strong> {chatMessage.response.quality.reason}
               </p>
 
-              <h4>Sources</h4>
-
-              {chatMessage.response.sources.length === 0 ? (
-                <p>No sources returned.</p>
-              ) : (
-                chatMessage.response.sources.map((source) => (
-                  <details key={source.chunk_id}>
-                    <summary>
-                      Source {source.source_number} — chunk {source.chunk_index}
-                    </summary>
-
-                    <p>
-                      <strong>Rerank score:</strong>{" "}
-                      {source.rerank_score.toFixed(3)}
-                    </p>
-
-                    <p>
-                      <strong>Semantic score:</strong>{" "}
-                      {source.semantic_score.toFixed(3)}
-                    </p>
-
-                    <p>
-                      <strong>Keyword match:</strong>{" "}
-                      {source.keyword_match ? "Yes" : "No"}
-                    </p>
-
-                    <p>{source.preview}</p>
-                  </details>
-                ))
-              )}
+              <CitationViewer sources={chatMessage.response.sources} />
             </article>
           ))
         )}

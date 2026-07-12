@@ -9,6 +9,7 @@ from app.services.chunk_metadata_service import (
 )
 from app.services.llm_service import generate_answer_with_ollama
 from app.services.prompt_service import build_rag_prompt
+from app.services.answer_quality_service import assess_context_quality
 
 
 DEFAULT_CANDIDATE_LIMIT = 20
@@ -154,3 +155,26 @@ def build_source_citations(context_chunks: list[dict[str, Any]]) -> list[dict[st
         )
 
     return citations
+
+def generate_quality_checked_rag_answer(
+    *,
+    question: str,
+    context_chunks: list[dict[str, Any]],
+) -> dict[str, Any]:
+    quality = assess_context_quality(context_chunks=context_chunks)
+
+    if not quality["is_answerable"]:
+        return {
+            "answer": "I could not find this in the uploaded documents.",
+            "quality": quality,
+        }
+
+    answer = generate_rag_answer(
+        question=question,
+        context_chunks=context_chunks,
+    )
+
+    return {
+        "answer": answer,
+        "quality": quality,
+    }

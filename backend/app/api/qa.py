@@ -3,7 +3,7 @@ from fastapi import APIRouter, Query
 from app.services.rag_service import (
     build_context_text,
     build_source_citations,
-    generate_rag_answer,
+    generate_quality_checked_rag_answer,
     retrieve_context_for_question,
 )
 
@@ -25,7 +25,7 @@ def answer_question(
         candidate_limit=candidate_limit,
     )
 
-    answer = generate_rag_answer(
+    answer_result = generate_quality_checked_rag_answer(
         question=q,
         context_chunks=context_chunks,
     )
@@ -33,7 +33,8 @@ def answer_question(
     response = {
         "question": q,
         "document_id": document_id,
-        "answer": answer,
+        "answer": answer_result["answer"],
+        "quality": answer_result["quality"],
         "source_count": len(context_chunks),
         "sources": build_source_citations(context_chunks),
     }

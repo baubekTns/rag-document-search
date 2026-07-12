@@ -34,10 +34,11 @@ A Retrieval-Augmented Generation (RAG) application that allows users to upload d
 
 ### Phase 4: Question Answering
 
-- [ ] Retrieval pipeline
-- [ ] LLM integration
-- [ ] Context-aware answer generation
-- [ ] Source citations
+- [x] Retrieval pipeline
+- [x] LLM integration
+- [x] Context-aware answer generation
+- [x] Source citations
+- [x] Answer quality checks
 
 ### Phase 5: User Interface
 
@@ -108,7 +109,7 @@ Example queries:
 | Relational Database | PostgreSQL            |
 | Vector Database     | Qdrant                |
 | Embeddings          | Sentence Transformers |
-| LLM                 | OpenAI / Gemini       |
+| LLM                 | Ollama                |
 | Deployment          | Docker                |
 
 ---

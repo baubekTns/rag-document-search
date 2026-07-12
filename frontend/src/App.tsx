@@ -1,6 +1,6 @@
+import ChatInterface from "./components/ChatInterface";
 import DocumentSearch from "./components/DocumentSearch";
 import DocumentUpload from "./components/DocumentUpload";
-import QuestionAnswer from "./components/QuestionAnswer";
 
 function App() {
   return (
@@ -11,7 +11,7 @@ function App() {
 
       <DocumentSearch />
 
-      <QuestionAnswer />
+      <ChatInterface />
     </main>
   );
 }

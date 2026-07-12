@@ -46,7 +46,7 @@ A Retrieval-Augmented Generation (RAG) application that allows users to upload d
 - [x] Search workflow
 - [x] Question answering workflow
 - [x] Source preview display
-- [ ] Chat interface
+- [x] Chat interface
 - [ ] Citation viewer
 
 ### Phase 6: Production Readiness

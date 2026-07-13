@@ -51,10 +51,11 @@ A Retrieval-Augmented Generation (RAG) application that allows users to upload d
 
 ### Phase 6: Production Readiness
 
-- [ ] Automated tests
-- [ ] Logging and monitoring
-- [ ] Docker deployment
-- [ ] CI/CD pipeline
+- [x] Backend tests
+- [ ] Logging
+- [ ] Error handling improvements
+- [ ] Docker production cleanup
+- [ ] CI/CD
 
 ### Stretch Goals
 

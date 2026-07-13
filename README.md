@@ -53,7 +53,7 @@ A Retrieval-Augmented Generation (RAG) application that allows users to upload d
 
 - [x] Backend tests
 - [x] Logging
-- [ ] Error handling improvements
+- [x] Error handling improvements
 - [ ] Docker production cleanup
 - [ ] CI/CD
 

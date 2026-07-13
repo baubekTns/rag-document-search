@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from app.core.exceptions import AppError
 from app.api.documents import router as documents_router
 from app.api.search import router as search_router
 from app.api.upload import router as upload_router
@@ -17,6 +19,13 @@ from app.core.logging_config import configure_logging
 
 configure_logging()
 app = FastAPI()
+
+@app.exception_handler(AppError)
+def app_error_handler(request: Request, error: AppError):
+    return JSONResponse(
+        status_code=error.status_code,
+        content={"detail": error.message},
+    )
 
 app.add_middleware(
     CORSMiddleware,

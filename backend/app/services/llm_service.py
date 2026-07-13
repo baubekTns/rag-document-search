@@ -1,7 +1,8 @@
 import os
 
 import requests
-from fastapi import HTTPException
+
+from app.core.exceptions import LLMServiceError
 
 
 OLLAMA_BASE_URL = os.getenv(
@@ -29,11 +30,14 @@ def generate_answer_with_ollama(prompt: str) -> str:
         response.raise_for_status()
 
     except requests.RequestException as error:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Failed to call Ollama: {error}",
+        raise LLMServiceError(
+            f"Failed to call Ollama. Make sure Ollama is running and model '{OLLAMA_MODEL}' is available. Error: {error}"
         )
 
     data = response.json()
+    answer = data.get("response", "").strip()
 
-    return data.get("response", "").strip()
+    if not answer:
+        raise LLMServiceError("Ollama returned an empty answer")
+
+    return answer

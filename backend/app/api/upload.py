@@ -1,6 +1,6 @@
 from pathlib import Path
 from uuid import uuid4
-
+from app.core.exceptions import AppError
 from fastapi import APIRouter, File, HTTPException, UploadFile
 import logging
 from app.services.chunk_metadata_service import create_document_chunks
@@ -171,6 +171,17 @@ async def upload_pdf(file: UploadFile = File(...)):
 
         logger.exception(
             "Handled upload failure: document_id=%s filename=%s",
+            document_id,
+            original_filename,
+        )
+        raise
+
+    except AppError:
+        if file_path.exists():
+            file_path.unlink()
+
+        logger.exception(
+            "Application upload failure: document_id=%s filename=%s",
             document_id,
             original_filename,
         )

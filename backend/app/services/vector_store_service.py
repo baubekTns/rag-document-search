@@ -1,6 +1,6 @@
 import os
 from typing import Any
-
+from app.core.exceptions import VectorStoreError
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
@@ -18,26 +18,37 @@ def get_qdrant_client() -> QdrantClient:
 
 
 def count_vectors() -> int:
-    client = get_qdrant_client()
+    try:
+        client = get_qdrant_client()
+        collection_info = client.get_collection(QDRANT_COLLECTION_NAME)
 
-    collection_info = client.get_collection(QDRANT_COLLECTION_NAME)
+        return collection_info.points_count or 0
 
-    return collection_info.points_count or 0
+    except Exception as error:
+        raise VectorStoreError(
+            f"Failed to read Qdrant collection status: {error}"
+        )
 
 
 def initialize_vector_collection() -> None:
     client = get_qdrant_client()
 
-    if client.collection_exists(QDRANT_COLLECTION_NAME):
-        return
+    try:
+        if client.collection_exists(QDRANT_COLLECTION_NAME):
+            return
 
-    client.create_collection(
-        collection_name=QDRANT_COLLECTION_NAME,
-        vectors_config=VectorParams(
-            size=VECTOR_SIZE,
-            distance=Distance.COSINE,
-        ),
-    )
+        client.create_collection(
+            collection_name=QDRANT_COLLECTION_NAME,
+            vectors_config=VectorParams(
+                size=VECTOR_SIZE,
+                distance=Distance.COSINE,
+            ),
+        )
+
+    except Exception as error:
+        raise VectorStoreError(
+            f"Failed to initialize Qdrant collection: {error}"
+        )
 
 
 def store_chunk_vectors(
@@ -49,8 +60,6 @@ def store_chunk_vectors(
 ) -> int:
     if len(chunk_records) != len(embeddings):
         raise ValueError("chunk_records and embeddings must have the same length")
-
-    client = get_qdrant_client()
 
     points = []
 
@@ -73,12 +82,19 @@ def store_chunk_vectors(
     if not points:
         return 0
 
-    client.upsert(
-        collection_name=QDRANT_COLLECTION_NAME,
-        points=points,
-    )
+    try:
+        client = get_qdrant_client()
+        client.upsert(
+            collection_name=QDRANT_COLLECTION_NAME,
+            points=points,
+        )
 
-    return len(points)
+        return len(points)
+
+    except Exception as error:
+        raise VectorStoreError(
+            f"Failed to store vectors in Qdrant: {error}"
+        )
 
 
 def search_similar_chunks(
@@ -103,13 +119,19 @@ def search_similar_chunks(
             ]
         )
 
-    search_response = client.query_points(
-        collection_name=QDRANT_COLLECTION_NAME,
-        query=query_embedding,
-        query_filter=query_filter,
-        limit=limit,
-        with_payload=True,
-    )
+    try:
+        search_response = client.query_points(
+            collection_name=QDRANT_COLLECTION_NAME,
+            query=query_embedding,
+            query_filter=query_filter,
+            limit=limit,
+            with_payload=True,
+        )
+
+    except Exception as error:
+        raise VectorStoreError(
+            f"Failed to search vectors in Qdrant: {error}"
+        )
 
     results = []
 

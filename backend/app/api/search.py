@@ -7,7 +7,9 @@ from app.services.chunk_metadata_service import (
 from app.services.embedding_service import generate_embedding
 from app.services.reranking_service import rerank_chunks
 from app.services.vector_store_service import search_similar_chunks
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/search", tags=["search"])
 
 
@@ -21,6 +23,13 @@ def keyword_search(
         query=q,
         document_id=document_id,
         limit=limit,
+    )
+
+    logger.info(
+        "Keyword search completed: query=%s document_id=%s result_count=%s",
+        q,
+        document_id,
+        len(results),
     )
 
     return {
@@ -43,6 +52,13 @@ def semantic_search(
         query_embedding=query_embedding,
         document_id=document_id,
         limit=limit,
+    )
+
+    logger.info(
+        "Semantic search completed: query=%s document_id=%s result_count=%s",
+        q,
+        document_id,
+        len(results),
     )
 
     return {
@@ -125,6 +141,14 @@ def reranked_search(
         query=q,
         candidates=candidates,
         limit=limit,
+    )
+
+    logger.info(
+        "Reranked search completed: query=%s document_id=%s candidate_count=%s result_count=%s",
+        q,
+        document_id,
+        len(candidates),
+        len(reranked_results),
     )
 
     return {

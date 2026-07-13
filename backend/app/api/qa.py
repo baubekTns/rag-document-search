@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-
+import logging
 from app.services.rag_service import (
     build_context_text,
     build_source_citations,
@@ -7,6 +7,7 @@ from app.services.rag_service import (
     retrieve_context_for_question,
 )
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/qa", tags=["qa"])
 
 
@@ -42,5 +43,13 @@ def answer_question(
     if include_context:
         response["context"] = context_chunks
         response["context_text"] = build_context_text(context_chunks)
+
+    logger.info(
+        "QA answer completed: question=%s document_id=%s is_answerable=%s source_count=%s",
+        q,
+        document_id,
+        answer_result["quality"]["is_answerable"],
+        len(context_chunks),
+    )
 
     return response

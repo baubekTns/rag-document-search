@@ -10,12 +10,12 @@ from app.services.chunk_metadata_service import (
 )
 from app.services.document_metadata_service import initialize_document_metadata_table
 from app.services.embedding_metadata_service import initialize_chunk_embeddings_table
-
 from app.services.vector_store_service import initialize_vector_collection
 from app.api.vector_store import router as vector_store_router
-
 from app.api.qa import router as qa_router
+from app.core.logging_config import configure_logging
 
+configure_logging()
 app = FastAPI()
 
 app.add_middleware(

@@ -2,7 +2,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
-
+import logging
 from app.services.chunk_metadata_service import create_document_chunks
 from app.services.document_metadata_service import create_document_metadata
 from app.services.embedding_metadata_service import create_chunk_embeddings
@@ -19,6 +19,7 @@ from app.services.vector_store_service import (
     store_chunk_vectors,
 )
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 UPLOAD_DIR = Path("uploads")
@@ -37,13 +38,30 @@ async def upload_pdf(file: UploadFile = File(...)):
     stored_filename = f"{document_id}_{original_filename}"
     file_path = UPLOAD_DIR / stored_filename
 
+    logger.info(
+        "Received PDF upload: document_id=%s filename=%s",
+        document_id,
+        original_filename,
+    )
+
     contents = await file.read()
     file_size = len(contents)
 
     if file_size == 0:
+        logger.warning(
+            "Rejected empty PDF upload: document_id=%s filename=%s",
+            document_id,
+            original_filename,
+        )
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
     if file_size > MAX_FILE_SIZE_BYTES:
+        logger.warning(
+            "Rejected oversized PDF upload: document_id=%s filename=%s size=%s",
+            document_id,
+            original_filename,
+            file_size,
+        )
         raise HTTPException(
             status_code=413,
             detail="PDF file is too large. Maximum size is 10 MB",
@@ -53,7 +71,21 @@ async def upload_pdf(file: UploadFile = File(...)):
         with open(file_path, "wb") as f:
             f.write(contents)
 
+        logger.info(
+            "Saved uploaded PDF: document_id=%s stored_filename=%s size=%s",
+            document_id,
+            stored_filename,
+            file_size,
+        )
+
         extraction = extract_pdf_text(file_path)
+
+        logger.info(
+            "Extracted PDF text: document_id=%s pages=%s characters=%s",
+            document_id,
+            extraction["pages"],
+            extraction["characters"],
+        )
 
         document_metadata = create_document_metadata(
             document_id=document_id,
@@ -76,6 +108,12 @@ async def upload_pdf(file: UploadFile = File(...)):
             chunks=chunks,
         )
 
+        logger.info(
+            "Created document chunks: document_id=%s chunk_count=%s",
+            document_id,
+            len(chunk_records),
+        )
+
         embeddings = generate_embeddings(chunks)
 
         embedding_records = create_chunk_embeddings(
@@ -85,11 +123,24 @@ async def upload_pdf(file: UploadFile = File(...)):
             model_name=EMBEDDING_MODEL_NAME,
         )
 
+        logger.info(
+            "Generated embeddings: document_id=%s embedding_count=%s model=%s",
+            document_id,
+            len(embedding_records),
+            EMBEDDING_MODEL_NAME,
+        )
+
         vector_count = store_chunk_vectors(
             document_id=document_id,
             chunk_records=chunk_records,
             embeddings=embeddings,
             model_name=EMBEDDING_MODEL_NAME,
+        )
+
+        logger.info(
+            "Stored vectors: document_id=%s vector_count=%s",
+            document_id,
+            vector_count,
         )
 
         return {
@@ -117,9 +168,21 @@ async def upload_pdf(file: UploadFile = File(...)):
     except HTTPException:
         if file_path.exists():
             file_path.unlink()
+
+        logger.exception(
+            "Handled upload failure: document_id=%s filename=%s",
+            document_id,
+            original_filename,
+        )
         raise
 
     except Exception:
         if file_path.exists():
             file_path.unlink()
+
+        logger.exception(
+            "Unexpected upload failure: document_id=%s filename=%s",
+            document_id,
+            original_filename,
+        )
         raise HTTPException(status_code=500, detail="Failed to process uploaded PDF")

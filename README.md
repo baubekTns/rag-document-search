@@ -54,7 +54,7 @@ A Retrieval-Augmented Generation (RAG) application that allows users to upload d
 - [x] Backend tests
 - [x] Logging
 - [x] Error handling improvements
-- [ ] Docker production cleanup
+- [x] Docker production cleanup
 - [ ] CI/CD
 
 ### Stretch Goals

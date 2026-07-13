@@ -5,6 +5,10 @@
 backend/uploads
 backend/data/
 
+.env
+backend/.env
+frontend/.env
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

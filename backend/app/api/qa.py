@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 import logging
+from time import perf_counter
 from app.services.rag_service import (
     build_context_text,
     build_source_citations,
@@ -7,6 +8,7 @@ from app.services.rag_service import (
     retrieve_context_for_question,
 )
 from app.schemas.api import AnswerQuery, AnswerResponse
+from app.core.logging import log_event
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/qa", tags=["qa"])
@@ -14,6 +16,7 @@ router = APIRouter(prefix="/qa", tags=["qa"])
 
 @router.get("/answer", response_model=AnswerResponse, response_model_exclude_unset=True)
 def answer_question(query: AnswerQuery = Depends()):
+    started_at = perf_counter()
     context_chunks = retrieve_context_for_question(
         question=query.q,
         document_id=query.document_id,
@@ -39,12 +42,13 @@ def answer_question(query: AnswerQuery = Depends()):
         response["context"] = context_chunks
         response["context_text"] = build_context_text(context_chunks)
 
-    logger.info(
-        "QA answer completed: question=%s document_id=%s is_answerable=%s source_count=%s",
-        query.q,
-        query.document_id,
-        answer_result["quality"]["is_answerable"],
-        len(context_chunks),
+    log_event(
+        logger,
+        "qa_completed",
+        document_id=query.document_id,
+        is_answerable=answer_result["quality"]["is_answerable"],
+        source_count=len(context_chunks),
+        duration_ms=round((perf_counter() - started_at) * 1000),
     )
 
     return response

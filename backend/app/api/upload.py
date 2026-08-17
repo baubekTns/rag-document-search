@@ -4,10 +4,12 @@ from app.core.exceptions import AppError
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
 import logging
+from time import perf_counter
 from app.services.file_validation_service import sanitize_filename, validate_pdf_signature, validate_pdf_upload
 from app.core.settings import get_settings
 from app.schemas.api import UploadResponse
 from app.services.document_ingestion_service import ingest_document
+from app.core.logging import log_error_event, log_event
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -48,11 +50,8 @@ async def upload_pdf(file: UploadFile = File(...)):
     original_filename = sanitize_filename(file.filename)
     stored_filename = f"{document_id}_{original_filename}"
 
-    logger.info(
-        "Received PDF upload: document_id=%s filename=%s",
-        document_id,
-        original_filename,
-    )
+    started_at = perf_counter()
+    log_event(logger, "upload_received", document_id=document_id)
 
     staged_path = get_settings().upload_staging_directory / f"{document_id}.part"
 
@@ -68,35 +67,22 @@ async def upload_pdf(file: UploadFile = File(...)):
                 staged_path=staged_path,
                 file_size=file_size,
             )
-        logger.info(
-            "Completed PDF upload: document_id=%s stored_filename=%s size=%s",
-            document_id,
-            stored_filename,
-            file_size,
+        log_event(
+            logger, "upload_completed", document_id=document_id, file_size=file_size,
+            chunk_count=result["chunking"]["chunk_count"],
+            duration_ms=round((perf_counter() - started_at) * 1000),
         )
         return result
 
     except HTTPException:
         staged_path.unlink(missing_ok=True)
-        logger.exception(
-            "Handled upload failure: document_id=%s filename=%s",
-            document_id,
-            original_filename,
-        )
+        log_event(logger, "upload_failed", document_id=document_id, error_category="validation")
         raise
 
-    except AppError:
-        logger.exception(
-            "Application upload failure: document_id=%s filename=%s",
-            document_id,
-            original_filename,
-        )
+    except AppError as error:
+        log_event(logger, "upload_failed", document_id=document_id, error_category=type(error).__name__)
         raise
 
     except Exception:
-        logger.exception(
-            "Unexpected upload failure: document_id=%s filename=%s",
-            document_id,
-            original_filename,
-        )
+        log_error_event(logger, "upload_failed", document_id=document_id, error_category="unexpected")
         raise HTTPException(status_code=500, detail="Failed to process uploaded PDF")

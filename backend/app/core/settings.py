@@ -30,6 +30,7 @@ class Settings:
     ollama_timeout_seconds: float
     ollama_max_output_tokens: int
     ollama_max_retries: int
+    readiness_timeout_seconds: float
 
 
 @lru_cache(maxsize=1)
@@ -55,4 +56,5 @@ def get_settings() -> Settings:
         ollama_timeout_seconds=float(os.getenv("OLLAMA_TIMEOUT_SECONDS", "120")),
         ollama_max_output_tokens=int(os.getenv("OLLAMA_MAX_OUTPUT_TOKENS", "512")),
         ollama_max_retries=int(os.getenv("OLLAMA_MAX_RETRIES", "1")),
+        readiness_timeout_seconds=float(os.getenv("READINESS_TIMEOUT_SECONDS", "2")),
     )

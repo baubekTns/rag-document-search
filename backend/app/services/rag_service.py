@@ -2,12 +2,15 @@ from typing import Any
 
 from app.services.retrieval_service import retrieve_hybrid_results
 from app.services.llm_service import generate_answer_with_ollama
-from app.services.prompt_service import build_rag_prompt
+from app.services.prompt_service import build_rag_prompt, validate_citation_markers
+from app.core.logging import log_event
+import logging
 from app.services.answer_quality_service import assess_context_quality
 
 
 DEFAULT_CANDIDATE_LIMIT = 20
 DEFAULT_CONTEXT_LIMIT = 5
+logger = logging.getLogger(__name__)
 
 
 def retrieve_context_for_question(
@@ -37,23 +40,6 @@ def build_context_text(context_chunks: list[dict[str, Any]]) -> str:
 
     return "\n\n".join(context_sections)
 
-
-def create_retrieval_preview_answer(
-    *,
-    question: str,
-    context_chunks: list[dict[str, Any]],
-) -> str:
-    if not context_chunks:
-        return (
-            "I could not find relevant context in the uploaded documents for this question."
-        )
-
-    return (
-        "Relevant context was retrieved successfully. "
-        "LLM answer generation has not been added yet, so this endpoint currently "
-        "returns the retrieved sources that would be used to answer the question."
-    )
-
 def generate_rag_answer(
     *,
     question: str,
@@ -67,7 +53,11 @@ def generate_rag_answer(
         context_chunks=context_chunks,
     )
 
-    return generate_answer_with_ollama(prompt)
+    answer = generate_answer_with_ollama(prompt)
+    if not validate_citation_markers(answer, len(context_chunks)):
+        log_event(logger, "citation_integrity_failed", source_count=len(context_chunks))
+        return "I could not find this in the uploaded documents."
+    return answer
 
 def build_source_citations(context_chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     citations = []

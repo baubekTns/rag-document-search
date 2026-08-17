@@ -8,6 +8,7 @@ from app.core.database import transaction
 from app.core.settings import get_settings
 from app.services.document_metadata_service import delete_document_records, get_document_metadata, list_document_metadata
 from app.services.vector_store_service import count_document_vectors, delete_document_vectors, get_qdrant_client, QDRANT_COLLECTION_NAME
+from app.core.logging import log_error_event
 
 
 logger = logging.getLogger(__name__)
@@ -28,14 +29,14 @@ def cleanup_document(document_id: str, stored_filename: str | None = None) -> Cl
     try:
         delete_document_vectors(document_id)
     except Exception as error:
-        logger.exception("Unable to remove vectors for document_id=%s", document_id)
+        log_error_event(logger, "cleanup_failed", document_id=document_id, component="qdrant")
         result.errors.append(str(error))
 
     try:
         with transaction() as connection:
             delete_document_records(document_id, connection)
     except Exception as error:
-        logger.exception("Unable to remove SQLite records for document_id=%s", document_id)
+        log_error_event(logger, "cleanup_failed", document_id=document_id, component="sqlite")
         result.errors.append(str(error))
 
     settings = get_settings()
@@ -46,7 +47,7 @@ def cleanup_document(document_id: str, stored_filename: str | None = None) -> Cl
         try:
             path.unlink(missing_ok=True)
         except OSError as error:
-            logger.exception("Unable to remove document file %s", path)
+            log_error_event(logger, "cleanup_failed", document_id=document_id, component="file_storage")
             result.errors.append(str(error))
     return result
 

@@ -13,6 +13,7 @@ from app.services.embedding_service import EMBEDDING_MODEL_NAME, generate_embedd
 from app.services.pdf_service import extract_pdf_text
 from app.services.text_chunking_service import chunk_page_texts
 from app.services.vector_store_service import QDRANT_COLLECTION_NAME, store_chunk_vectors
+from app.core.logging import log_error_event
 
 
 logger = logging.getLogger(__name__)
@@ -93,5 +94,5 @@ def ingest_document(
     except Exception:
         cleanup_result = cleanup_document(document_id, stored_filename)
         if cleanup_result.errors:
-            logger.error("Ingestion compensation incomplete for document_id=%s", document_id)
+            log_error_event(logger, "ingestion_compensation_incomplete", document_id=document_id)
         raise

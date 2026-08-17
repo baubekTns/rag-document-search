@@ -7,6 +7,11 @@ class RootResponse(BaseModel):
     status: str
 
 
+class ReadinessResponse(BaseModel):
+    status: str
+    dependencies: dict[str, str]
+
+
 class ErrorResponse(BaseModel):
     detail: str
 

@@ -7,11 +7,9 @@ from app.services.chunk_metadata_service import create_document_chunks
 from app.services.document_metadata_service import create_document_metadata
 from app.services.embedding_metadata_service import create_chunk_embeddings
 from app.services.embedding_service import EMBEDDING_MODEL_NAME, generate_embeddings
-from app.services.file_validation_service import (
-    MAX_FILE_SIZE_BYTES,
-    sanitize_filename,
-    validate_pdf_upload,
-)
+from app.services.file_validation_service import sanitize_filename, validate_pdf_upload
+from app.core.settings import get_settings
+from app.schemas.api import UploadResponse
 from app.services.pdf_service import extract_pdf_text
 from app.services.text_chunking_service import chunk_text
 from app.services.vector_store_service import (
@@ -22,14 +20,14 @@ from app.services.vector_store_service import (
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR = get_settings().upload_directory
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 
 
-@router.post("/upload")
+@router.post("/upload", response_model=UploadResponse)
 async def upload_pdf(file: UploadFile = File(...)):
     validate_pdf_upload(file)
 
@@ -55,7 +53,7 @@ async def upload_pdf(file: UploadFile = File(...)):
         )
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
-    if file_size > MAX_FILE_SIZE_BYTES:
+    if file_size > get_settings().max_upload_size_bytes:
         logger.warning(
             "Rejected oversized PDF upload: document_id=%s filename=%s size=%s",
             document_id,

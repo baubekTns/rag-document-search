@@ -1,15 +1,12 @@
-import os
 from typing import Any
 from app.core.exceptions import VectorStoreError
+from app.core.settings import get_settings
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
 
-QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
-QDRANT_COLLECTION_NAME = os.getenv(
-    "QDRANT_COLLECTION_NAME",
-    "document_chunks",
-)
+QDRANT_URL = get_settings().qdrant_url
+QDRANT_COLLECTION_NAME = get_settings().qdrant_collection_name
 VECTOR_SIZE = 384
 
 

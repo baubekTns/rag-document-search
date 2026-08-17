@@ -1,24 +1,15 @@
 import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
+from app.core.database import get_connection, transaction
 
 
-DATA_DIR = Path("data")
-DATA_DIR.mkdir(exist_ok=True)
-
-DATABASE_PATH = DATA_DIR / "documents.db"
-
-
-def get_connection() -> sqlite3.Connection:
-    connection = sqlite3.connect(DATABASE_PATH)
-    connection.row_factory = sqlite3.Row
-    return connection
-
-
-def initialize_document_metadata_table() -> None:
-    with get_connection() as connection:
-        connection.execute(
+def initialize_document_metadata_table(connection: sqlite3.Connection | None = None) -> None:
+    if connection is None:
+        with transaction() as transaction_connection:
+            initialize_document_metadata_table(transaction_connection)
+        return
+    connection.execute(
             """
             CREATE TABLE IF NOT EXISTS documents (
                 id TEXT PRIMARY KEY,
@@ -31,7 +22,7 @@ def initialize_document_metadata_table() -> None:
                 uploaded_at TEXT NOT NULL
             )
             """
-        )
+    )
 
 
 def create_document_metadata(
@@ -43,11 +34,18 @@ def create_document_metadata(
     file_size: int,
     page_count: int,
     character_count: int,
+    connection: sqlite3.Connection | None = None,
 ) -> dict[str, Any]:
     uploaded_at = datetime.now(timezone.utc).isoformat()
 
-    with get_connection() as connection:
-        connection.execute(
+    if connection is None:
+        with transaction() as transaction_connection:
+            return create_document_metadata(
+                document_id=document_id, original_filename=original_filename,
+                stored_filename=stored_filename, content_type=content_type, file_size=file_size,
+                page_count=page_count, character_count=character_count, connection=transaction_connection,
+            )
+    connection.execute(
             """
             INSERT INTO documents (
                 id,
@@ -71,7 +69,7 @@ def create_document_metadata(
                 character_count,
                 uploaded_at,
             ),
-        )
+    )
 
     return {
         "id": document_id,

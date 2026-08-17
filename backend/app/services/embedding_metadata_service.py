@@ -1,26 +1,19 @@
 import json
 import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
 
-DATA_DIR = Path("data")
-DATA_DIR.mkdir(exist_ok=True)
-
-DATABASE_PATH = DATA_DIR / "documents.db"
+from app.core.database import get_connection, transaction
 
 
-def get_connection() -> sqlite3.Connection:
-    connection = sqlite3.connect(DATABASE_PATH)
-    connection.row_factory = sqlite3.Row
-    return connection
-
-
-def initialize_chunk_embeddings_table() -> None:
-    with get_connection() as connection:
-        connection.execute(
+def initialize_chunk_embeddings_table(connection: sqlite3.Connection | None = None) -> None:
+    if connection is None:
+        with transaction() as transaction_connection:
+            initialize_chunk_embeddings_table(transaction_connection)
+        return
+    connection.execute(
             """
             CREATE TABLE IF NOT EXISTS chunk_embeddings (
                 id TEXT PRIMARY KEY,
@@ -35,7 +28,7 @@ def initialize_chunk_embeddings_table() -> None:
                 UNIQUE (chunk_id, model_name)
             )
             """
-        )
+    )
 
 
 def create_chunk_embeddings(
@@ -44,6 +37,7 @@ def create_chunk_embeddings(
     chunk_records: list[dict[str, Any]],
     embeddings: list[list[float]],
     model_name: str,
+    connection: sqlite3.Connection | None = None,
 ) -> list[dict[str, Any]]:
     if len(chunk_records) != len(embeddings):
         raise ValueError("chunk_records and embeddings must have the same length")
@@ -65,8 +59,13 @@ def create_chunk_embeddings(
             }
         )
 
-    with get_connection() as connection:
-        connection.executemany(
+    if connection is None:
+        with transaction() as transaction_connection:
+            return create_chunk_embeddings(
+                document_id=document_id, chunk_records=chunk_records, embeddings=embeddings,
+                model_name=model_name, connection=transaction_connection,
+            )
+    connection.executemany(
             """
             INSERT INTO chunk_embeddings (
                 id,
@@ -91,7 +90,7 @@ def create_chunk_embeddings(
                 )
                 for record in embedding_records
             ],
-        )
+    )
 
     return embedding_records
 

@@ -1,19 +1,11 @@
-import os
-
 import requests
 
 from app.core.exceptions import LLMServiceError
+from app.core.settings import get_settings
 
 
-OLLAMA_BASE_URL = os.getenv(
-    "OLLAMA_BASE_URL",
-    "http://host.docker.internal:11434",
-)
-
-OLLAMA_MODEL = os.getenv(
-    "OLLAMA_MODEL",
-    "llama3.2:3b",
-)
+OLLAMA_BASE_URL = get_settings().ollama_base_url
+OLLAMA_MODEL = get_settings().ollama_model
 
 
 def generate_answer_with_ollama(prompt: str) -> str:
@@ -25,7 +17,7 @@ def generate_answer_with_ollama(prompt: str) -> str:
                 "prompt": prompt,
                 "stream": False,
             },
-            timeout=120,
+            timeout=get_settings().ollama_timeout_seconds,
         )
         response.raise_for_status()
 

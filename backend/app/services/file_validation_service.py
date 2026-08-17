@@ -1,7 +1,7 @@
 import re
 from fastapi import HTTPException, UploadFile
+from app.core.settings import get_settings
 
-MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 ALLOWED_CONTENT_TYPES = {"application/pdf"}
 
 

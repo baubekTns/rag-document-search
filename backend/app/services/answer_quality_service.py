@@ -6,6 +6,14 @@ MIN_TOP_SEMANTIC_SCORE = 0.25
 MIN_LEXICAL_SCORE = 0.1
 
 
+def quality_thresholds() -> dict[str, float]:
+    return {
+        "min_top_rerank_score": MIN_TOP_RERANK_SCORE,
+        "min_top_semantic_score": MIN_TOP_SEMANTIC_SCORE,
+        "min_lexical_score": MIN_LEXICAL_SCORE,
+    }
+
+
 def assess_context_quality(
     *,
     context_chunks: list[dict[str, Any]],
@@ -17,6 +25,7 @@ def assess_context_quality(
             "top_rerank_score": 0.0,
             "top_semantic_score": 0.0,
             "top_lexical_score": 0.0,
+            "thresholds": quality_thresholds(),
         }
 
     top_chunk = context_chunks[0]
@@ -48,9 +57,5 @@ def assess_context_quality(
         "top_rerank_score": top_rerank_score,
         "top_semantic_score": top_semantic_score,
         "top_lexical_score": top_lexical_score,
-        "thresholds": {
-            "min_top_rerank_score": MIN_TOP_RERANK_SCORE,
-            "min_top_semantic_score": MIN_TOP_SEMANTIC_SCORE,
-            "min_lexical_score": MIN_LEXICAL_SCORE,
-        },
+        "thresholds": quality_thresholds(),
     }

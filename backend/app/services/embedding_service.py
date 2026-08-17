@@ -3,9 +3,9 @@ from functools import lru_cache
 from fastembed import TextEmbedding
 
 from app.core.exceptions import EmbeddingGenerationError
+from app.core.settings import get_settings
 
-
-EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING_MODEL_NAME = get_settings().embedding_model_name
 
 
 @lru_cache(maxsize=1)

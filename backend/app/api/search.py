@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends
 
 from app.services.chunk_metadata_service import (
     get_chunk_by_id,
@@ -7,87 +7,78 @@ from app.services.chunk_metadata_service import (
 from app.services.embedding_service import generate_embedding
 from app.services.reranking_service import rerank_chunks
 from app.services.vector_store_service import search_similar_chunks
+from app.schemas.api import (
+    KeywordSearchQuery, KeywordSearchResponse, RerankedSearchQuery,
+    RerankedSearchResponse, SemanticSearchQuery, SemanticSearchResponse,
+)
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/search", tags=["search"])
 
 
-@router.get("/keyword")
-def keyword_search(
-    q: str = Query(..., min_length=1),
-    document_id: str | None = None,
-    limit: int = Query(default=10, ge=1, le=50),
-):
+@router.get("/keyword", response_model=KeywordSearchResponse)
+def keyword_search(query: KeywordSearchQuery = Depends()):
     results = search_chunks_by_keyword(
-        query=q,
-        document_id=document_id,
-        limit=limit,
+        query=query.q,
+        document_id=query.document_id,
+        limit=query.limit,
     )
 
     logger.info(
         "Keyword search completed: query=%s document_id=%s result_count=%s",
-        q,
-        document_id,
+        query.q,
+        query.document_id,
         len(results),
     )
 
     return {
-        "query": q,
-        "document_id": document_id,
+        "query": query.q,
+        "document_id": query.document_id,
         "result_count": len(results),
         "results": results,
     }
 
 
-@router.get("/semantic")
-def semantic_search(
-    q: str = Query(..., min_length=1),
-    document_id: str | None = None,
-    limit: int = Query(default=5, ge=1, le=20),
-):
-    query_embedding = generate_embedding(q)
+@router.get("/semantic", response_model=SemanticSearchResponse)
+def semantic_search(query: SemanticSearchQuery = Depends()):
+    query_embedding = generate_embedding(query.q)
 
     results = search_similar_chunks(
         query_embedding=query_embedding,
-        document_id=document_id,
-        limit=limit,
+        document_id=query.document_id,
+        limit=query.limit,
     )
 
     logger.info(
         "Semantic search completed: query=%s document_id=%s result_count=%s",
-        q,
-        document_id,
+        query.q,
+        query.document_id,
         len(results),
     )
 
     return {
-        "query": q,
-        "document_id": document_id,
+        "query": query.q,
+        "document_id": query.document_id,
         "result_count": len(results),
         "results": results,
     }
 
 
-@router.get("/reranked")
-def reranked_search(
-    q: str = Query(..., min_length=1),
-    document_id: str | None = None,
-    limit: int = Query(default=5, ge=1, le=20),
-    candidate_limit: int = Query(default=20, ge=5, le=50),
-):
-    query_embedding = generate_embedding(q)
+@router.get("/reranked", response_model=RerankedSearchResponse)
+def reranked_search(query: RerankedSearchQuery = Depends()):
+    query_embedding = generate_embedding(query.q)
 
     semantic_results = search_similar_chunks(
         query_embedding=query_embedding,
-        document_id=document_id,
-        limit=candidate_limit,
+        document_id=query.document_id,
+        limit=query.candidate_limit,
     )
 
     keyword_results = search_chunks_by_keyword(
-        query=q,
-        document_id=document_id,
-        limit=candidate_limit,
+        query=query.q,
+        document_id=query.document_id,
+        limit=query.candidate_limit,
     )
 
     candidates_by_chunk_id = {}
@@ -138,22 +129,22 @@ def reranked_search(
     candidates = list(candidates_by_chunk_id.values())
 
     reranked_results = rerank_chunks(
-        query=q,
+        query=query.q,
         candidates=candidates,
-        limit=limit,
+        limit=query.limit,
     )
 
     logger.info(
         "Reranked search completed: query=%s document_id=%s candidate_count=%s result_count=%s",
-        q,
-        document_id,
+        query.q,
+        query.document_id,
         len(candidates),
         len(reranked_results),
     )
 
     return {
-        "query": q,
-        "document_id": document_id,
+        "query": query.q,
+        "document_id": query.document_id,
         "candidate_count": len(candidates),
         "result_count": len(reranked_results),
         "results": reranked_results,

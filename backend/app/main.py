@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import Request
-from fastapi.responses import JSONResponse
 from app.core.exceptions import AppError
 from app.api.documents import router as documents_router
 from app.api.search import router as search_router
@@ -16,29 +14,29 @@ from app.services.vector_store_service import initialize_vector_collection
 from app.api.vector_store import router as vector_store_router
 from app.api.qa import router as qa_router
 from app.core.logging_config import configure_logging
+from app.core.database import initialize_schema_version, transaction
+from app.core.settings import get_settings
+from app.schemas.api import RootResponse
+from app.core.error_handlers import app_error_handler
 
 configure_logging()
 app = FastAPI()
-
-@app.exception_handler(AppError)
-def app_error_handler(request: Request, error: AppError):
-    return JSONResponse(
-        status_code=error.status_code,
-        content={"detail": error.message},
-    )
+app.add_exception_handler(AppError, app_error_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=list(get_settings().cors_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-initialize_document_metadata_table()
-initialize_document_chunks_table()
-initialize_chunk_keyword_index()
-initialize_chunk_embeddings_table()
+with transaction() as connection:
+    initialize_schema_version(connection)
+    initialize_document_metadata_table(connection)
+    initialize_document_chunks_table(connection)
+    initialize_chunk_keyword_index(connection)
+    initialize_chunk_embeddings_table(connection)
 initialize_vector_collection()
 
 app.include_router(upload_router)
@@ -48,6 +46,6 @@ app.include_router(vector_store_router)
 app.include_router(qa_router)
 
 
-@app.get("/")
+@app.get("/", response_model=RootResponse)
 def root():
     return {"status": "ok"}

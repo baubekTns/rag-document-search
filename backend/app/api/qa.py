@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends
 import logging
 from app.services.rag_service import (
     build_context_text,
@@ -6,48 +6,43 @@ from app.services.rag_service import (
     generate_quality_checked_rag_answer,
     retrieve_context_for_question,
 )
+from app.schemas.api import AnswerQuery, AnswerResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/qa", tags=["qa"])
 
 
-@router.get("/answer")
-def answer_question(
-    q: str = Query(..., min_length=1),
-    document_id: str | None = None,
-    context_limit: int = Query(default=5, ge=1, le=10),
-    candidate_limit: int = Query(default=20, ge=5, le=50),
-    include_context: bool = False,
-):
+@router.get("/answer", response_model=AnswerResponse, response_model_exclude_unset=True)
+def answer_question(query: AnswerQuery = Depends()):
     context_chunks = retrieve_context_for_question(
-        question=q,
-        document_id=document_id,
-        context_limit=context_limit,
-        candidate_limit=candidate_limit,
+        question=query.q,
+        document_id=query.document_id,
+        context_limit=query.context_limit,
+        candidate_limit=query.candidate_limit,
     )
 
     answer_result = generate_quality_checked_rag_answer(
-        question=q,
+        question=query.q,
         context_chunks=context_chunks,
     )
 
     response = {
-        "question": q,
-        "document_id": document_id,
+        "question": query.q,
+        "document_id": query.document_id,
         "answer": answer_result["answer"],
         "quality": answer_result["quality"],
         "source_count": len(context_chunks),
         "sources": build_source_citations(context_chunks),
     }
 
-    if include_context:
+    if query.include_context:
         response["context"] = context_chunks
         response["context_text"] = build_context_text(context_chunks)
 
     logger.info(
         "QA answer completed: question=%s document_id=%s is_answerable=%s source_count=%s",
-        q,
-        document_id,
+        query.q,
+        query.document_id,
         answer_result["quality"]["is_answerable"],
         len(context_chunks),
     )

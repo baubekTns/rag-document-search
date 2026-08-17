@@ -9,15 +9,19 @@ from app.services.document_metadata_service import (
     get_document_metadata,
     list_document_metadata,
 )
+from app.schemas.api import (
+    ChunkResponse, DocumentChunksResponse, DocumentEmbeddingsResponse,
+    DocumentResponse, DocumentsResponse,
+)
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 
-@router.get("/")
+@router.get("/", response_model=DocumentsResponse)
 def list_documents():
     return {"documents": list_document_metadata()}
 
-@router.get("/{document_id}/chunks")
+@router.get("/{document_id}/chunks", response_model=DocumentChunksResponse)
 def get_document_chunks(document_id: str):
     document = get_document_metadata(document_id)
 
@@ -33,7 +37,7 @@ def get_document_chunks(document_id: str):
     }
 
 
-@router.get("/{document_id}/chunks/{chunk_id}")
+@router.get("/{document_id}/chunks/{chunk_id}", response_model=ChunkResponse)
 def get_document_chunk(document_id: str, chunk_id: str):
     document = get_document_metadata(document_id)
 
@@ -47,7 +51,7 @@ def get_document_chunk(document_id: str, chunk_id: str):
 
     return {"chunk": chunk}
 
-@router.get("/{document_id}/embeddings")
+@router.get("/{document_id}/embeddings", response_model=DocumentEmbeddingsResponse)
 def get_document_embeddings(document_id: str):
     document = get_document_metadata(document_id)
 
@@ -63,7 +67,7 @@ def get_document_embeddings(document_id: str):
     }
 
 
-@router.get("/{document_id}")
+@router.get("/{document_id}", response_model=DocumentResponse)
 def get_document(document_id: str):
     document = get_document_metadata(document_id)
 

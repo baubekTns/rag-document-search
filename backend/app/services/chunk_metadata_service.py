@@ -1,26 +1,19 @@
 import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 from uuid import uuid4
 import re
 
 
-DATA_DIR = Path("data")
-DATA_DIR.mkdir(exist_ok=True)
-
-DATABASE_PATH = DATA_DIR / "documents.db"
+from app.core.database import get_connection, transaction
 
 
-def get_connection() -> sqlite3.Connection:
-    connection = sqlite3.connect(DATABASE_PATH)
-    connection.row_factory = sqlite3.Row
-    return connection
-
-
-def initialize_document_chunks_table() -> None:
-    with get_connection() as connection:
-        connection.execute(
+def initialize_document_chunks_table(connection: sqlite3.Connection | None = None) -> None:
+    if connection is None:
+        with transaction() as transaction_connection:
+            initialize_document_chunks_table(transaction_connection)
+        return
+    connection.execute(
             """
             CREATE TABLE IF NOT EXISTS document_chunks (
                 id TEXT PRIMARY KEY,
@@ -32,13 +25,14 @@ def initialize_document_chunks_table() -> None:
                 FOREIGN KEY (document_id) REFERENCES documents(id)
             )
             """
-        )
+    )
 
 
 def create_document_chunks(
     *,
     document_id: str,
     chunks: list[str],
+    connection: sqlite3.Connection | None = None,
 ) -> list[dict[str, Any]]:
     created_at = datetime.now(timezone.utc).isoformat()
 
@@ -54,8 +48,10 @@ def create_document_chunks(
         for index, chunk in enumerate(chunks)
     ]
 
-    with get_connection() as connection:
-        connection.executemany(
+    if connection is None:
+        with transaction() as transaction_connection:
+            return create_document_chunks(document_id=document_id, chunks=chunks, connection=transaction_connection)
+    connection.executemany(
             """
             INSERT INTO document_chunks (
                 id,
@@ -78,9 +74,9 @@ def create_document_chunks(
                 )
                 for record in chunk_records
             ],
-        )
+    )
 
-        connection.executemany(
+    connection.executemany(
             """
             INSERT INTO document_chunks_fts (
                 chunk_id,
@@ -97,7 +93,7 @@ def create_document_chunks(
                 )
                 for record in chunk_records
             ],
-        )
+    )
 
     return chunk_records
 
@@ -160,9 +156,12 @@ def get_chunk_by_id(document_id: str, chunk_id: str) -> dict[str, Any] | None:
 
     return dict(row)
 
-def initialize_chunk_keyword_index() -> None:
-    with get_connection() as connection:
-        connection.execute(
+def initialize_chunk_keyword_index(connection: sqlite3.Connection | None = None) -> None:
+    if connection is None:
+        with transaction() as transaction_connection:
+            initialize_chunk_keyword_index(transaction_connection)
+        return
+    connection.execute(
             """
             CREATE VIRTUAL TABLE IF NOT EXISTS document_chunks_fts
             USING fts5(
@@ -171,7 +170,7 @@ def initialize_chunk_keyword_index() -> None:
                 chunk_text
             )
             """
-        )
+    )
 
 def build_safe_fts_query(query: str) -> str:
     stop_words = {

@@ -5,13 +5,15 @@ services:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend:/app
+      - backend_data:/app/data
+      - backend_uploads:/app/uploads
     environment:
       - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
       - QDRANT_COLLECTION_NAME=${QDRANT_COLLECTION_NAME:-document_chunks}
       - QDRANT_TIMEOUT_SECONDS=${QDRANT_TIMEOUT_SECONDS:-10}
-      - SQLITE_DATABASE_PATH=${SQLITE_DATABASE_PATH:-data/documents.db}
-      - UPLOAD_DIRECTORY=${UPLOAD_DIRECTORY:-uploads}
-      - UPLOAD_STAGING_DIRECTORY=${UPLOAD_STAGING_DIRECTORY:-uploads/.staging}
+      - SQLITE_DATABASE_PATH=/app/data/documents.db
+      - UPLOAD_DIRECTORY=/app/uploads
+      - UPLOAD_STAGING_DIRECTORY=/app/uploads/.staging
       - MAX_UPLOAD_SIZE_BYTES=${MAX_UPLOAD_SIZE_BYTES:-10485760}
       - UPLOAD_STREAM_CHUNK_SIZE=${UPLOAD_STREAM_CHUNK_SIZE:-65536}
       - INGESTION_CONCURRENCY=${INGESTION_CONCURRENCY:-2}
@@ -25,7 +27,16 @@ services:
       - OLLAMA_MAX_RETRIES=${OLLAMA_MAX_RETRIES:-1}
       - READINESS_TIMEOUT_SECONDS=${READINESS_TIMEOUT_SECONDS:-2}
     depends_on:
-      - qdrant
+      qdrant:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://localhost:8000/health/live', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    stop_signal: SIGTERM
+    stop_grace_period: 20s
 
   frontend:
     build: ./frontend
@@ -33,11 +44,20 @@ services:
       - "${FRONTEND_PORT:-5173}:5173"
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - frontend_node_modules:/app/node_modules
     environment:
       - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:5173 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    stop_signal: SIGTERM
+    stop_grace_period: 10s
 
   qdrant:
     image: qdrant/qdrant
@@ -45,6 +65,16 @@ services:
       - "${QDRANT_PORT:-6333}:6333"
     volumes:
       - qdrant_storage:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/bin/bash -c 'exec 3<>/dev/tcp/localhost/6333'"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    stop_grace_period: 30s
 
 volumes:
+  backend_data:
+  backend_uploads:
+  frontend_node_modules:
   qdrant_storage:

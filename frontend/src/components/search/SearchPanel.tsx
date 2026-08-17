@@ -9,7 +9,8 @@ export function SearchPanel() {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<SearchMode>("reranked");
   const [validationMessage, setValidationMessage] = useState("");
-  const { data: searchResult, error, status, execute } = useDocumentSearch();
+  const [cancellationMessage, setCancellationMessage] = useState("");
+  const { data: searchResult, error, status, execute, cancel } = useDocumentSearch();
   const workspace = useDocumentWorkspace();
   const loading = status === "loading";
 
@@ -20,8 +21,16 @@ export function SearchPanel() {
     }
 
     setValidationMessage("");
+    setCancellationMessage("");
     await execute(query.trim(), mode, workspace.selectedDocumentId);
   };
+
+  const handleCancel = () => {
+    cancel();
+    setCancellationMessage("Search cancelled. Previous results are still available.");
+  };
+
+  const errorMessage = validationMessage || error?.message;
 
   return (
     <section className="panel search-panel" aria-labelledby="search-title">
@@ -40,11 +49,13 @@ export function SearchPanel() {
         onQueryChange={setQuery}
         onModeChange={setMode}
         onSubmit={() => void handleSearch()}
+        describedBy={errorMessage ? "search-error" : undefined}
       />
 
-      {validationMessage && <p className="feedback feedback-error">{validationMessage}</p>}
-      {error && <p className="feedback feedback-error">{error.message}</p>}
-      {loading && <p className="feedback feedback-loading">Searching documents...</p>}
+      {loading && <button className="button button-tertiary cancel-action" type="button" onClick={handleCancel}>Cancel search</button>}
+      {errorMessage && <p id="search-error" className="feedback feedback-error" role="alert">{errorMessage}</p>}
+      {loading && <p className="feedback feedback-loading" role="status" aria-live="polite">Searching documents...</p>}
+      {cancellationMessage && <p className="feedback feedback-loading" role="status" aria-live="polite">{cancellationMessage}</p>}
       {searchResult && <SearchResults result={searchResult} mode={mode} />}
     </section>
   );

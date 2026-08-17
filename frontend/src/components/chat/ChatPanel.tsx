@@ -7,7 +7,8 @@ import { QuestionComposer } from "./QuestionComposer";
 export function ChatPanel() {
   const [question, setQuestion] = useState("");
   const [validationMessage, setValidationMessage] = useState("");
-  const { messages, error, status, execute } = useAskQuestion();
+  const [cancellationMessage, setCancellationMessage] = useState("");
+  const { messages, error, status, execute, cancel } = useAskQuestion();
   const workspace = useDocumentWorkspace();
   const loading = status === "loading";
 
@@ -20,9 +21,17 @@ export function ChatPanel() {
     }
 
     setValidationMessage("");
+    setCancellationMessage("");
     setQuestion("");
     await execute(trimmedQuestion, workspace.selectedDocumentId);
   };
+
+  const handleCancel = () => {
+    cancel();
+    setCancellationMessage("Question cancelled. Your conversation is still available.");
+  };
+
+  const errorMessage = validationMessage || error?.message;
 
   return (
     <section className="panel chat-panel" aria-labelledby="chat-title">
@@ -39,11 +48,13 @@ export function ChatPanel() {
         loading={loading}
         onQuestionChange={setQuestion}
         onSubmit={() => void handleAsk()}
+        describedBy={errorMessage ? "question-error" : undefined}
       />
 
-      {validationMessage && <p className="feedback feedback-error">{validationMessage}</p>}
-      {error && <p className="feedback feedback-error">{error.message}</p>}
-      {loading && <p className="feedback feedback-loading">Reviewing your documents...</p>}
+      {loading && <button className="button button-tertiary cancel-action" type="button" onClick={handleCancel}>Cancel question</button>}
+      {errorMessage && <p id="question-error" className="feedback feedback-error" role="alert">{errorMessage}</p>}
+      {loading && <p className="feedback feedback-loading" role="status" aria-live="polite">Reviewing your documents...</p>}
+      {cancellationMessage && <p className="feedback feedback-loading" role="status" aria-live="polite">{cancellationMessage}</p>}
       <Conversation messages={messages} />
     </section>
   );

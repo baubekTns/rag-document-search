@@ -188,6 +188,17 @@ input[type="file"]::file-selector-button {
   color: var(--color-primary);
 }
 
+.button-tertiary {
+  border-color: var(--color-border-strong);
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.button-tertiary:hover:not(:disabled) {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
 .document-selector {
   display: grid;
   gap: var(--space-3);
@@ -236,6 +247,10 @@ input[type="file"]::file-selector-button {
 
 .upload-controls {
   align-items: center;
+}
+
+.cancel-action {
+  margin-top: var(--space-3);
 }
 
 .upload-summary,
@@ -387,12 +402,16 @@ blockquote {
 
 @media (min-width: 720px) {
   .upload-controls {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
   }
 
   .search-form {
     grid-template-columns: minmax(0, 1fr) minmax(9rem, 0.35fr) auto;
     align-items: center;
+  }
+
+  .cancel-action {
+    margin-top: var(--space-4);
   }
 }
 

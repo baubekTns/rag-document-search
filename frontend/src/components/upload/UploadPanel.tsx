@@ -6,7 +6,8 @@ import { UploadSummary } from "./UploadSummary";
 export function UploadPanel() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [validationMessage, setValidationMessage] = useState("");
-  const { data: uploadResult, error, status, execute, reset } = useUploadDocument();
+  const [cancellationMessage, setCancellationMessage] = useState("");
+  const { data: uploadResult, error, status, execute, reset, cancel } = useUploadDocument();
   const { addDocument } = useDocumentWorkspace();
   const uploading = status === "loading";
 
@@ -14,6 +15,7 @@ export function UploadPanel() {
     const file = event.target.files?.[0];
 
     reset();
+    setCancellationMessage("");
 
     if (!file) {
       setSelectedFile(null);
@@ -29,7 +31,15 @@ export function UploadPanel() {
 
     setSelectedFile(file);
     setValidationMessage("");
+    setCancellationMessage("");
   };
+
+  const handleCancel = () => {
+    cancel();
+    setCancellationMessage("Upload cancelled.");
+  };
+
+  const errorMessage = validationMessage || error?.message;
 
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -53,23 +63,30 @@ export function UploadPanel() {
         <p>Add a PDF to make it available across the workspace.</p>
       </div>
 
-      <div className="upload-controls">
-        <input
-          type="file"
-          accept="application/pdf,.pdf"
-          onChange={handleFileChange}
-          disabled={uploading}
-        />
+      <form className="upload-controls" onSubmit={(event) => { event.preventDefault(); void handleUpload(); }} aria-busy={uploading}>
+        <label className="field-label" htmlFor="document-upload">
+          PDF document
+          <input
+            id="document-upload"
+            type="file"
+            accept="application/pdf,.pdf"
+            onChange={handleFileChange}
+            aria-describedby={errorMessage ? "upload-error" : undefined}
+            aria-invalid={Boolean(errorMessage)}
+            disabled={uploading}
+          />
+        </label>
 
-        <button className="button button-secondary" onClick={handleUpload} disabled={uploading || !selectedFile}>
+        <button className="button button-secondary" type="submit" disabled={uploading || !selectedFile}>
           {uploading ? "Uploading..." : "Upload"}
         </button>
-      </div>
+        {uploading && <button className="button button-tertiary" type="button" onClick={handleCancel}>Cancel</button>}
+      </form>
 
-      {validationMessage && <p className="feedback feedback-error">{validationMessage}</p>}
-      {error && <p className="feedback feedback-error">{error.message}</p>}
-      {uploading && <p className="feedback feedback-loading">Processing document...</p>}
-      {status === "success" && <p className="feedback feedback-success">PDF uploaded and chunked successfully.</p>}
+      {errorMessage && <p id="upload-error" className="feedback feedback-error" role="alert">{errorMessage}</p>}
+      {uploading && <p className="feedback feedback-loading" role="status" aria-live="polite">Processing document...</p>}
+      {cancellationMessage && <p className="feedback feedback-loading" role="status" aria-live="polite">{cancellationMessage}</p>}
+      {status === "success" && <p className="feedback feedback-success" role="status" aria-live="polite">PDF uploaded and chunked successfully.</p>}
       {uploadResult && <UploadSummary result={uploadResult} />}
     </section>
   );

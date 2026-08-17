@@ -43,11 +43,11 @@ export function DocumentSelector({
       </label>
 
       <p className="scope-status">Active scope: {activeDocument ? activeDocument.original_filename : "All documents"}</p>
-      {status === "loading" && <p className="feedback feedback-loading">Loading available documents...</p>}
-      {status === "success" && documents.length === 0 && <p className="empty-state">No documents uploaded yet.</p>}
+      {status === "loading" && <p className="feedback feedback-loading" role="status" aria-live="polite">Loading available documents...</p>}
+      {status === "success" && documents.length === 0 && <p className="empty-state" role="status">No documents uploaded yet.</p>}
       {status === "error" && error && (
-        <p className="feedback feedback-error">
-          {error.message} <button onClick={onRetry}>Retry</button>
+        <p className="feedback feedback-error" role="alert">
+          {error.message} <button type="button" onClick={onRetry}>Retry</button>
         </p>
       )}
     </div>

@@ -1,6 +1,6 @@
-import ChatInterface from "./components/ChatInterface";
-import DocumentSearch from "./components/DocumentSearch";
-import DocumentUpload from "./components/DocumentUpload";
+import { ChatPanel } from "./components/chat/ChatPanel";
+import { SearchPanel } from "./components/search/SearchPanel";
+import { UploadPanel } from "./components/upload/UploadPanel";
 import { DocumentWorkspaceProvider } from "./features/documents/DocumentWorkspaceProvider";
 
 function App() {
@@ -9,11 +9,11 @@ function App() {
       <main>
         <h1>AI Document Search</h1>
 
-        <DocumentUpload />
+        <UploadPanel />
 
-        <DocumentSearch />
+        <SearchPanel />
 
-        <ChatInterface />
+        <ChatPanel />
       </main>
     </DocumentWorkspaceProvider>
   );

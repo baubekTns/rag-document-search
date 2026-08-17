@@ -83,10 +83,6 @@ export function DocumentWorkspaceProvider({ children }: { children: ReactNode })
     setDocumentStatus("success");
   }, []);
 
-  const selectedDocument = selectedDocumentId
-    ? documents.find((document) => document.id === selectedDocumentId) ?? null
-    : null;
-
   return (
     <DocumentWorkspaceContext.Provider
       value={{
@@ -94,7 +90,6 @@ export function DocumentWorkspaceProvider({ children }: { children: ReactNode })
         documentStatus,
         documentError,
         selectedDocumentId,
-        selectedDocument,
         setSelectedDocumentId,
         addDocument,
         refreshDocuments,

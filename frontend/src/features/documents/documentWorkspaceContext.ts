@@ -7,7 +7,6 @@ export interface DocumentWorkspaceValue {
   documentStatus: RequestStatus;
   documentError: Error | null;
   selectedDocumentId: string | null;
-  selectedDocument: DocumentMetadata | null;
   setSelectedDocumentId: (documentId: string | null) => void;
   addDocument: (document: DocumentMetadata) => void;
   refreshDocuments: () => Promise<void>;

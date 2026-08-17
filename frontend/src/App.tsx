@@ -1,18 +1,21 @@
 import ChatInterface from "./components/ChatInterface";
 import DocumentSearch from "./components/DocumentSearch";
 import DocumentUpload from "./components/DocumentUpload";
+import { DocumentWorkspaceProvider } from "./features/documents/DocumentWorkspaceProvider";
 
 function App() {
   return (
-    <main>
-      <h1>AI Document Search</h1>
+    <DocumentWorkspaceProvider>
+      <main>
+        <h1>AI Document Search</h1>
 
-      <DocumentUpload />
+        <DocumentUpload />
 
-      <DocumentSearch />
+        <DocumentSearch />
 
-      <ChatInterface />
-    </main>
+        <ChatInterface />
+      </main>
+    </DocumentWorkspaceProvider>
   );
 }
 

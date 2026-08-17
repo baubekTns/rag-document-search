@@ -9,6 +9,10 @@ export interface DocumentMetadata {
   uploaded_at: string;
 }
 
+export interface DocumentListResponse {
+  documents: DocumentMetadata[];
+}
+
 export interface ChunkingMetadata {
   chunk_count: number;
   chunk_size: number;

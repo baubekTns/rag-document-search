@@ -1,5 +1,9 @@
 import { requestJson } from "./apiClient";
-import type { UploadResponse } from "../types/document";
+import type { DocumentListResponse, UploadResponse } from "../types/document";
+
+export function listDocuments(signal?: AbortSignal): Promise<DocumentListResponse> {
+  return requestJson<DocumentListResponse>("/documents/", { signal });
+}
 
 export async function uploadDocument(
   file: File,

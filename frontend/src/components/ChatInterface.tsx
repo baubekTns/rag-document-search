@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { DocumentScopeControl } from "../features/documents/DocumentScopeControl";
+import { useDocumentWorkspace } from "../features/documents/useDocumentWorkspace";
 import { useAskQuestion } from "../features/qa/useAskQuestion";
 import CitationViewer from "./CitationViewer";
 
@@ -6,6 +8,7 @@ export default function ChatInterface() {
   const [question, setQuestion] = useState("");
   const [validationMessage, setValidationMessage] = useState("");
   const { messages, error, status, execute } = useAskQuestion();
+  const { selectedDocumentId } = useDocumentWorkspace();
   const loading = status === "loading";
 
   const handleAsk = async () => {
@@ -18,12 +21,14 @@ export default function ChatInterface() {
 
     setValidationMessage("");
     setQuestion("");
-    await execute(trimmedQuestion);
+    await execute(trimmedQuestion, selectedDocumentId);
   };
 
   return (
     <section>
       <h2>Chat with Documents</h2>
+
+      <DocumentScopeControl label="Question" />
 
       <textarea
         value={question}

@@ -15,8 +15,8 @@ export function useAskQuestion() {
     execute: executeRequest,
     retry: retryRequest,
     ...requestState
-  } = useAbortableRequest<[string], QaAnswerResponse>(
-    ([question], signal) => askQuestion(question, 2, signal),
+  } = useAbortableRequest<[string, string | null], QaAnswerResponse>(
+    ([question, documentId], signal) => askQuestion(question, 2, signal, documentId),
   );
 
   const addMessage = useCallback((question: string, response: QaAnswerResponse) => {
@@ -27,9 +27,9 @@ export function useAskQuestion() {
   }, []);
 
   const execute = useCallback(
-    async (question: string) => {
+    async (question: string, documentId: string | null) => {
       lastQuestionRef.current = question;
-      const response = await executeRequest(question);
+      const response = await executeRequest(question, documentId);
 
       if (response) {
         addMessage(question, response);

@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useDocumentWorkspace } from "../features/documents/useDocumentWorkspace";
 import { useUploadDocument } from "../features/upload/useUploadDocument";
 
 export default function DocumentUpload() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [validationMessage, setValidationMessage] = useState("");
   const { data: uploadResult, error, status, execute, reset } = useUploadDocument();
+  const { addDocument } = useDocumentWorkspace();
   const uploading = status === "loading";
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,7 +40,11 @@ export default function DocumentUpload() {
     }
 
     setValidationMessage("");
-    await execute(selectedFile);
+    const result = await execute(selectedFile);
+
+    if (result) {
+      addDocument(result.document);
+    }
   };
 
   return (

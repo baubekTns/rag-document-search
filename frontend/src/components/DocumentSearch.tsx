@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { DocumentScopeControl } from "../features/documents/DocumentScopeControl";
+import { useDocumentWorkspace } from "../features/documents/useDocumentWorkspace";
 import { useDocumentSearch } from "../features/search/useDocumentSearch";
 import type { SearchMode } from "../types/search";
 
@@ -7,6 +9,7 @@ export default function DocumentSearch() {
   const [mode, setMode] = useState<SearchMode>("reranked");
   const [validationMessage, setValidationMessage] = useState("");
   const { data: searchResult, error, status, execute } = useDocumentSearch();
+  const { selectedDocumentId } = useDocumentWorkspace();
   const loading = status === "loading";
 
   const handleSearch = async () => {
@@ -16,12 +19,14 @@ export default function DocumentSearch() {
     }
 
     setValidationMessage("");
-    await execute(query.trim(), mode);
+    await execute(query.trim(), mode, selectedDocumentId);
   };
 
   return (
     <section>
       <h2>Search Documents</h2>
+
+      <DocumentScopeControl label="Search" />
 
       <input
         value={query}

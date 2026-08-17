@@ -1,12 +1,6 @@
 from typing import Any
 
-from app.services.embedding_service import generate_embedding
-from app.services.reranking_service import rerank_chunks
-from app.services.vector_store_service import search_similar_chunks
-from app.services.chunk_metadata_service import (
-    get_chunk_by_id,
-    search_chunks_by_keyword,
-)
+from app.services.retrieval_service import retrieve_hybrid_results
 from app.services.llm_service import generate_answer_with_ollama
 from app.services.prompt_service import build_rag_prompt
 from app.services.answer_quality_service import assess_context_quality
@@ -23,71 +17,11 @@ def retrieve_context_for_question(
     context_limit: int = DEFAULT_CONTEXT_LIMIT,
     candidate_limit: int = DEFAULT_CANDIDATE_LIMIT,
 ) -> list[dict[str, Any]]:
-    query_embedding = generate_embedding(question)
-
-    semantic_results = search_similar_chunks(
-        query_embedding=query_embedding,
-        document_id=document_id,
-        limit=candidate_limit,
-    )
-
-    keyword_results = search_chunks_by_keyword(
+    return retrieve_hybrid_results(
         query=question,
         document_id=document_id,
-        limit=candidate_limit,
-    )
-
-    candidates_by_chunk_id: dict[str, dict[str, Any]] = {}
-
-    for result in semantic_results:
-        chunk_id = result["chunk_id"]
-
-        if chunk_id is None:
-            continue
-
-        candidates_by_chunk_id[chunk_id] = {
-            "chunk_id": chunk_id,
-            "document_id": result["document_id"],
-            "chunk_index": result["chunk_index"],
-            "character_count": result["character_count"],
-            "model_name": result["model_name"],
-            "text": result["text"],
-            "semantic_score": result["score"],
-            "keyword_match": False,
-        }
-
-    for result in keyword_results:
-        chunk_id = result["id"]
-        result_document_id = result["document_id"]
-
-        if chunk_id in candidates_by_chunk_id:
-            candidates_by_chunk_id[chunk_id]["keyword_match"] = True
-            candidates_by_chunk_id[chunk_id]["keyword_snippet"] = result.get("snippet")
-            continue
-
-        chunk = get_chunk_by_id(result_document_id, chunk_id)
-
-        if chunk is None:
-            continue
-
-        candidates_by_chunk_id[chunk_id] = {
-            "chunk_id": chunk_id,
-            "document_id": result_document_id,
-            "chunk_index": result["chunk_index"],
-            "character_count": result["character_count"],
-            "model_name": None,
-            "text": chunk["chunk_text"],
-            "semantic_score": 0.0,
-            "keyword_match": True,
-            "keyword_snippet": result.get("snippet"),
-        }
-
-    candidates = list(candidates_by_chunk_id.values())
-
-    return rerank_chunks(
-        query=question,
-        candidates=candidates,
         limit=context_limit,
+        candidate_limit=candidate_limit,
     )
 
 
@@ -151,6 +85,8 @@ def build_source_citations(context_chunks: list[dict[str, Any]]) -> list[dict[st
                 "rerank_score": chunk.get("rerank_score"),
                 "semantic_score": chunk.get("semantic_score"),
                 "keyword_match": chunk.get("keyword_match"),
+                "page_start": chunk.get("page_start"),
+                "page_end": chunk.get("page_end"),
             }
         )
 

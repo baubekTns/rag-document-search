@@ -11,7 +11,7 @@ from app.services.document_metadata_service import create_document_metadata, upd
 from app.services.embedding_metadata_service import create_chunk_embeddings
 from app.services.embedding_service import EMBEDDING_MODEL_NAME, generate_embeddings
 from app.services.pdf_service import extract_pdf_text
-from app.services.text_chunking_service import chunk_text
+from app.services.text_chunking_service import chunk_page_texts
 from app.services.vector_store_service import QDRANT_COLLECTION_NAME, store_chunk_vectors
 
 
@@ -41,8 +41,8 @@ def ingest_document(
 
     try:
         extraction = extract_pdf_text(staged_path)
-        chunks = chunk_text(extraction["text"], chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
-        embeddings = generate_embeddings(chunks)
+        chunks = chunk_page_texts(extraction["page_texts"], chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
+        embeddings = generate_embeddings([str(chunk["text"]) for chunk in chunks])
 
         # Qdrant is intentionally inside the SQLite transaction. If either store fails,
         # the transaction rolls back and the compensating cleanup removes vector state.

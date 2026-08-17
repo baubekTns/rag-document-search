@@ -1,4 +1,4 @@
-from app.services.text_chunking_service import chunk_text
+from app.services.text_chunking_service import chunk_page_texts, chunk_text
 
 
 def test_chunk_text_returns_empty_list_for_empty_text():
@@ -21,3 +21,14 @@ def test_chunk_text_rejects_invalid_overlap():
         assert str(error) == "chunk_overlap must be smaller than chunk_size"
     else:
         raise AssertionError("Expected ValueError")
+
+
+def test_page_chunks_preserve_page_metadata_and_word_boundaries():
+    chunks = chunk_page_texts(
+        [{"page_number": 2, "text": "alpha beta gamma delta epsilon"}],
+        chunk_size=12,
+        chunk_overlap=3,
+    )
+
+    assert all(chunk["page_start"] == 2 and chunk["page_end"] == 2 for chunk in chunks)
+    assert chunks[0]["text"] == "alpha beta"

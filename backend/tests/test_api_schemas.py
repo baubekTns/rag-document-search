@@ -23,6 +23,8 @@ def test_semantic_result_schema_accepts_nullable_payload_fields():
                 "character_count": None,
                 "model_name": None,
                 "text": None,
+                "page_start": None,
+                "page_end": None,
             }],
         }
     )
@@ -41,6 +43,8 @@ def test_citation_schema_allows_nullable_scores():
             "rerank_score": None,
             "semantic_score": None,
             "keyword_match": None,
+            "page_start": None,
+            "page_end": None,
         }
     )
 

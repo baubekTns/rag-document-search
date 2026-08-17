@@ -84,6 +84,8 @@ def store_chunk_vectors(
                     "character_count": chunk_record["character_count"],
                     "model_name": model_name,
                     "text": chunk_record["chunk_text"],
+                    "page_start": chunk_record.get("page_start"),
+                    "page_end": chunk_record.get("page_end"),
                 },
             )
         )
@@ -176,6 +178,8 @@ def search_similar_chunks(
                 "character_count": payload.get("character_count"),
                 "model_name": payload.get("model_name"),
                 "text": payload.get("text"),
+                "page_start": payload.get("page_start"),
+                "page_end": payload.get("page_end"),
             }
         )
 

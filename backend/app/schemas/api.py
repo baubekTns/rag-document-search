@@ -12,26 +12,26 @@ class ErrorResponse(BaseModel):
 
 
 class KeywordSearchQuery(BaseModel):
-    q: str = Field(min_length=1)
+    q: str = Field(min_length=1, max_length=1000)
     document_id: str | None = None
     limit: int = Field(default=10, ge=1, le=50)
 
 
 class SemanticSearchQuery(BaseModel):
-    q: str = Field(min_length=1)
+    q: str = Field(min_length=1, max_length=1000)
     document_id: str | None = None
     limit: int = Field(default=5, ge=1, le=20)
 
 
 class RerankedSearchQuery(BaseModel):
-    q: str = Field(min_length=1)
+    q: str = Field(min_length=1, max_length=1000)
     document_id: str | None = None
     limit: int = Field(default=5, ge=1, le=20)
     candidate_limit: int = Field(default=20, ge=5, le=50)
 
 
 class AnswerQuery(BaseModel):
-    q: str = Field(min_length=1)
+    q: str = Field(min_length=1, max_length=1000)
     document_id: str | None = None
     context_limit: int = Field(default=5, ge=1, le=10)
     candidate_limit: int = Field(default=20, ge=5, le=50)
@@ -61,6 +61,8 @@ class ChunkPreview(BaseModel):
     character_count: int
     created_at: str
     preview: str
+    page_start: int | None
+    page_end: int | None
 
 
 class Chunk(BaseModel):
@@ -70,6 +72,8 @@ class Chunk(BaseModel):
     chunk_text: str
     character_count: int
     created_at: str
+    page_start: int | None
+    page_end: int | None
 
 
 class DocumentChunksResponse(BaseModel):
@@ -109,6 +113,8 @@ class KeywordSearchResult(BaseModel):
     created_at: str
     snippet: str
     preview: str
+    page_start: int | None
+    page_end: int | None
 
 
 class SemanticSearchResult(BaseModel):
@@ -119,6 +125,8 @@ class SemanticSearchResult(BaseModel):
     character_count: int | None
     model_name: str | None
     text: str | None
+    page_start: int | None
+    page_end: int | None
 
 
 class RerankedSearchResult(BaseModel):
@@ -134,6 +142,8 @@ class RerankedSearchResult(BaseModel):
     lexical_score: float
     phrase_bonus: float
     rerank_score: float
+    page_start: int | None
+    page_end: int | None
 
 
 class KeywordSearchResponse(BaseModel):
@@ -182,6 +192,8 @@ class Citation(BaseModel):
     rerank_score: float | None
     semantic_score: float | None
     keyword_match: bool | None
+    page_start: int | None
+    page_end: int | None
 
 
 class AnswerResponse(BaseModel):

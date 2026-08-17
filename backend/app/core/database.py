@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from app.core.settings import get_settings
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 def get_connection() -> sqlite3.Connection:
@@ -60,6 +60,19 @@ def apply_schema_migrations(connection: sqlite3.Connection) -> None:
                 "ALTER TABLE documents ADD COLUMN processing_status TEXT NOT NULL DEFAULT 'ready' "
                 "CHECK (processing_status IN ('processing', 'ready', 'failed'))"
             )
+        connection.execute(
+            "UPDATE schema_metadata SET value = ? WHERE key = 'schema_version'",
+            (str(SCHEMA_VERSION),),
+        )
+        current_version = 2
+    if current_version < 3:
+        columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(document_chunks)").fetchall()
+        }
+        if "page_start" not in columns:
+            connection.execute("ALTER TABLE document_chunks ADD COLUMN page_start INTEGER")
+        if "page_end" not in columns:
+            connection.execute("ALTER TABLE document_chunks ADD COLUMN page_end INTEGER")
         connection.execute(
             "UPDATE schema_metadata SET value = ? WHERE key = 'schema_version'",
             (str(SCHEMA_VERSION),),

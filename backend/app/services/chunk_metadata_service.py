@@ -22,6 +22,8 @@ def initialize_document_chunks_table(connection: sqlite3.Connection | None = Non
                 chunk_text TEXT NOT NULL,
                 character_count INTEGER NOT NULL,
                 created_at TEXT NOT NULL,
+                page_start INTEGER,
+                page_end INTEGER,
                 FOREIGN KEY (document_id) REFERENCES documents(id)
             )
             """
@@ -31,7 +33,7 @@ def initialize_document_chunks_table(connection: sqlite3.Connection | None = Non
 def create_document_chunks(
     *,
     document_id: str,
-    chunks: list[str],
+    chunks: list[str | dict[str, Any]],
     connection: sqlite3.Connection | None = None,
 ) -> list[dict[str, Any]]:
     created_at = datetime.now(timezone.utc).isoformat()
@@ -41,9 +43,11 @@ def create_document_chunks(
             "id": str(uuid4()),
             "document_id": document_id,
             "chunk_index": index,
-            "chunk_text": chunk,
-            "character_count": len(chunk),
+            "chunk_text": chunk if isinstance(chunk, str) else str(chunk["text"]),
+            "character_count": len(chunk if isinstance(chunk, str) else str(chunk["text"])),
             "created_at": created_at,
+            "page_start": None if isinstance(chunk, str) else chunk.get("page_start"),
+            "page_end": None if isinstance(chunk, str) else chunk.get("page_end"),
         }
         for index, chunk in enumerate(chunks)
     ]
@@ -59,9 +63,11 @@ def create_document_chunks(
                 chunk_index,
                 chunk_text,
                 character_count,
-                created_at
+                created_at,
+                page_start,
+                page_end
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 (
@@ -71,6 +77,8 @@ def create_document_chunks(
                     record["chunk_text"],
                     record["character_count"],
                     record["created_at"],
+                    record["page_start"],
+                    record["page_end"],
                 )
                 for record in chunk_records
             ],
@@ -110,7 +118,9 @@ def list_chunk_previews_for_document(
                 chunk_index,
                 chunk_text,
                 character_count,
-                created_at
+                created_at,
+                page_start,
+                page_end
             FROM document_chunks
             WHERE document_id = ?
             ORDER BY chunk_index ASC
@@ -144,7 +154,9 @@ def get_chunk_by_id(document_id: str, chunk_id: str) -> dict[str, Any] | None:
                 chunk_index,
                 chunk_text,
                 character_count,
-                created_at
+                created_at,
+                page_start,
+                page_end
             FROM document_chunks
             WHERE document_id = ? AND id = ?
             """,
@@ -155,6 +167,21 @@ def get_chunk_by_id(document_id: str, chunk_id: str) -> dict[str, Any] | None:
         return None
 
     return dict(row)
+
+
+def get_chunks_by_ids(chunk_ids: list[str]) -> dict[str, dict[str, Any]]:
+    if not chunk_ids:
+        return {}
+    placeholders = ", ".join("?" for _ in chunk_ids)
+    with get_connection() as connection:
+        rows = connection.execute(
+            f"""
+            SELECT id, document_id, chunk_index, chunk_text, character_count, created_at, page_start, page_end
+            FROM document_chunks WHERE id IN ({placeholders})
+            """,
+            chunk_ids,
+        ).fetchall()
+    return {row["id"]: dict(row) for row in rows}
 
 def initialize_chunk_keyword_index(connection: sqlite3.Connection | None = None) -> None:
     if connection is None:
@@ -223,6 +250,8 @@ def search_chunks_by_keyword(
             c.chunk_index,
             c.character_count,
             c.created_at,
+            c.page_start,
+            c.page_end,
             snippet(document_chunks_fts, 2, '<mark>', '</mark>', '...', 20) AS snippet,
             substr(c.chunk_text, 1, ?) AS preview
         FROM document_chunks_fts

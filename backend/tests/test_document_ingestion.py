@@ -29,12 +29,22 @@ def isolated_ingestion_storage(monkeypatch, tmp_path):
 
 
 def _extraction(_: Path) -> dict:
-    return {"pages": 1, "characters": 12, "text_preview": "Example text", "text": "Example text"}
+    return {
+        "pages": 1,
+        "characters": 12,
+        "text_preview": "Example text",
+        "text": "Example text",
+        "page_texts": [{"page_number": 1, "text": "Example text"}],
+    }
 
 
 def _configure_success(monkeypatch):
     monkeypatch.setattr(document_ingestion_service, "extract_pdf_text", _extraction)
-    monkeypatch.setattr(document_ingestion_service, "chunk_text", lambda *_args, **_kwargs: ["Example text"])
+    monkeypatch.setattr(
+        document_ingestion_service,
+        "chunk_page_texts",
+        lambda *_args, **_kwargs: [{"text": "Example text", "page_start": 1, "page_end": 1}],
+    )
     monkeypatch.setattr(document_ingestion_service, "generate_embeddings", lambda _: [[0.1, 0.2]])
     monkeypatch.setattr(document_ingestion_service, "store_chunk_vectors", lambda **_: 1)
 

@@ -1,17 +1,18 @@
+from functools import lru_cache
 from typing import Any
 from app.core.exceptions import VectorStoreError
 from app.core.settings import get_settings
+from app.services.embedding_service import get_embedding_dimension
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, VectorParams
 
 
 QDRANT_URL = get_settings().qdrant_url
 QDRANT_COLLECTION_NAME = get_settings().qdrant_collection_name
-VECTOR_SIZE = 384
 
-
+@lru_cache(maxsize=1)
 def get_qdrant_client() -> QdrantClient:
-    return QdrantClient(url=QDRANT_URL)
+    return QdrantClient(url=QDRANT_URL, timeout=get_settings().qdrant_timeout_seconds)
 
 
 def count_vectors() -> int:
@@ -29,15 +30,26 @@ def count_vectors() -> int:
 
 def initialize_vector_collection() -> None:
     client = get_qdrant_client()
+    vector_size = get_embedding_dimension()
 
     try:
         if client.collection_exists(QDRANT_COLLECTION_NAME):
+            collection = client.get_collection(QDRANT_COLLECTION_NAME)
+            vectors = collection.config.params.vectors
+            if isinstance(vectors, dict):
+                raise VectorStoreError("Qdrant collection uses named vectors, but this application uses one unnamed vector")
+            if vectors.size != vector_size or vectors.distance != Distance.COSINE:
+                raise VectorStoreError(
+                    "Qdrant collection configuration is incompatible: "
+                    f"expected size={vector_size}, distance=Cosine; "
+                    f"found size={vectors.size}, distance={vectors.distance}"
+                )
             return
 
         client.create_collection(
             collection_name=QDRANT_COLLECTION_NAME,
             vectors_config=VectorParams(
-                size=VECTOR_SIZE,
+                size=vector_size,
                 distance=Distance.COSINE,
             ),
         )

@@ -31,15 +31,13 @@ def ingest_document(
     original_filename: str,
     stored_filename: str,
     content_type: str,
-    contents: bytes,
+    staged_path: Path,
+    file_size: int,
 ) -> dict:
     """Ingest a validated upload and leave no ready state after a failure."""
     settings = get_settings()
     settings.upload_directory.mkdir(parents=True, exist_ok=True)
-    settings.upload_staging_directory.mkdir(parents=True, exist_ok=True)
-    staged_path = settings.upload_staging_directory / f"{document_id}.part"
     final_path = settings.upload_directory / stored_filename
-    staged_path.write_bytes(contents)
 
     try:
         extraction = extract_pdf_text(staged_path)
@@ -54,7 +52,7 @@ def ingest_document(
                 original_filename=original_filename,
                 stored_filename=stored_filename,
                 content_type=content_type,
-                file_size=len(contents),
+                file_size=file_size,
                 page_count=extraction["pages"],
                 character_count=extraction["characters"],
                 processing_status="processing",

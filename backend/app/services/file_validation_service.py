@@ -32,3 +32,8 @@ def validate_pdf_upload(file: UploadFile) -> None:
 
     if not sanitized_filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="File must have a .pdf extension")
+
+
+def validate_pdf_signature(header: bytes) -> None:
+    if not header.startswith(b"%PDF-"):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid PDF")

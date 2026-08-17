@@ -40,12 +40,16 @@ def _configure_success(monkeypatch):
 
 
 def _ingest():
+    staged_path = get_settings().upload_staging_directory / "document-1.part"
+    staged_path.parent.mkdir(parents=True, exist_ok=True)
+    staged_path.write_bytes(b"pdf-content")
     return document_ingestion_service.ingest_document(
         document_id="document-1",
         original_filename="example.pdf",
         stored_filename="document-1_example.pdf",
         content_type="application/pdf",
-        contents=b"pdf-content",
+        staged_path=staged_path,
+        file_size=len(b"pdf-content"),
     )
 
 

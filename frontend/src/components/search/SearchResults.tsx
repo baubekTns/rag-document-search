@@ -8,16 +8,18 @@ interface SearchResultsProps {
 
 export function SearchResults({ result, mode }: SearchResultsProps) {
   return (
-    <div>
+    <div className="search-results">
       <h3>Results</h3>
-      <p><strong>Mode:</strong> {mode}</p>
-      <p><strong>Results:</strong> {result.result_count}</p>
+      <div className="result-summary">
+        <p><strong>Mode:</strong> {mode}</p>
+        <p><strong>Results:</strong> {result.result_count}</p>
+      </div>
       {result.candidate_count !== undefined && (
-        <p><strong>Candidates:</strong> {result.candidate_count}</p>
+        <p className="result-summary"><strong>Candidates:</strong> {result.candidate_count}</p>
       )}
 
       {result.results.length === 0 ? (
-        <p>No results found.</p>
+        <p className="empty-state">No results found.</p>
       ) : (
         result.results.map((searchResult, index) => {
           const key = searchResult.chunk_id || searchResult.id || `${searchResult.document_id}-${index}`;

@@ -1,4 +1,5 @@
 import { ChatPanel } from "./components/chat/ChatPanel";
+import { DocumentLibrary } from "./components/documents/DocumentLibrary";
 import { SearchPanel } from "./components/search/SearchPanel";
 import { UploadPanel } from "./components/upload/UploadPanel";
 import { DocumentWorkspaceProvider } from "./features/documents/DocumentWorkspaceProvider";
@@ -6,15 +7,28 @@ import { DocumentWorkspaceProvider } from "./features/documents/DocumentWorkspac
 function App() {
   return (
     <DocumentWorkspaceProvider>
-      <main>
-        <h1>AI Document Search</h1>
+      <div className="app-shell">
+        <header className="app-header">
+          <div>
+            <p className="eyebrow">RAG workspace</p>
+            <h1>Document Intelligence</h1>
+            <p>Search your PDFs, ask grounded questions, and review the evidence behind every answer.</p>
+          </div>
+          <p className="app-badge">AI document search</p>
+        </header>
 
-        <UploadPanel />
+        <div className="workspace-grid">
+          <aside className="workspace-sidebar">
+            <DocumentLibrary />
+            <UploadPanel />
+          </aside>
 
-        <SearchPanel />
-
-        <ChatPanel />
-      </main>
+          <main className="workspace-content">
+            <ChatPanel />
+            <SearchPanel />
+          </main>
+        </div>
+      </div>
     </DocumentWorkspaceProvider>
   );
 }

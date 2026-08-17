@@ -7,19 +7,23 @@ interface UploadSummaryProps {
 
 export function UploadSummary({ result }: UploadSummaryProps) {
   return (
-    <div>
+    <div className="upload-summary">
       <h3>Document Metadata</h3>
-      <p><strong>Filename:</strong> {result.document.original_filename}</p>
-      <p><strong>Pages:</strong> {result.document.page_count}</p>
-      <p><strong>Characters:</strong> {result.document.character_count}</p>
+      <dl className="metadata-list">
+        <div><dt>Filename</dt><dd>{result.document.original_filename}</dd></div>
+        <div><dt>Pages</dt><dd>{result.document.page_count}</dd></div>
+        <div><dt>Characters</dt><dd>{result.document.character_count}</dd></div>
+      </dl>
 
       <h3>Chunking</h3>
-      <p><strong>Chunks:</strong> {result.chunking.chunk_count}</p>
-      <p><strong>Chunk size:</strong> {result.chunking.chunk_size}</p>
-      <p><strong>Chunk overlap:</strong> {result.chunking.chunk_overlap}</p>
+      <dl className="metadata-list">
+        <div><dt>Chunks</dt><dd>{result.chunking.chunk_count}</dd></div>
+        <div><dt>Chunk size</dt><dd>{result.chunking.chunk_size}</dd></div>
+        <div><dt>Chunk overlap</dt><dd>{result.chunking.chunk_overlap}</dd></div>
+      </dl>
 
       <h3>Text Preview</h3>
-      <p>{result.text_preview}</p>
+      <p className="text-preview">{result.text_preview}</p>
 
       <ProcessingDetails result={result} />
     </div>

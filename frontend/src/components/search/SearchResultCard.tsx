@@ -19,7 +19,7 @@ export function SearchResultCard({ result, index }: SearchResultCardProps) {
   ] as const;
 
   return (
-    <article>
+    <article className="search-result-card">
       <h4>Result {index + 1}</h4>
       <p><strong>Document:</strong> {result.document_id}</p>
       <p><strong>Chunk index:</strong> {result.chunk_index}</p>
@@ -32,7 +32,7 @@ export function SearchResultCard({ result, index }: SearchResultCardProps) {
         <p><strong>Keyword match:</strong> {result.keyword_match ? "Yes" : "No"}</p>
       )}
 
-      <p>{displayText}</p>
+      <p className="result-snippet">{displayText}</p>
     </article>
   );
 }

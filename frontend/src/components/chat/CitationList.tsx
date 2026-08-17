@@ -7,11 +7,11 @@ interface CitationListProps {
 
 export function CitationList({ sources }: CitationListProps) {
   if (sources.length === 0) {
-    return <p>No sources returned.</p>;
+    return <p className="empty-state">No sources returned.</p>;
   }
 
   return (
-    <div>
+    <div className="citation-list">
       <h4>Sources</h4>
       {sources.map((source) => <CitationCard key={source.chunk_id} source={source} />)}
     </div>

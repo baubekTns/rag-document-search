@@ -83,6 +83,10 @@ export function DocumentWorkspaceProvider({ children }: { children: ReactNode })
     setDocumentStatus("success");
   }, []);
 
+  const scopeLabel = selectedDocumentId
+    ? documents.find((document) => document.id === selectedDocumentId)?.original_filename ?? "All documents"
+    : "All documents";
+
   return (
     <DocumentWorkspaceContext.Provider
       value={{
@@ -90,6 +94,7 @@ export function DocumentWorkspaceProvider({ children }: { children: ReactNode })
         documentStatus,
         documentError,
         selectedDocumentId,
+        scopeLabel,
         setSelectedDocumentId,
         addDocument,
         refreshDocuments,

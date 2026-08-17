@@ -10,7 +10,7 @@ function formatScore(score: unknown): string {
 
 export function CitationCard({ source }: CitationCardProps) {
   return (
-    <details>
+    <details className="citation-card">
       <summary>Source {source.source_number} — chunk {source.chunk_index}</summary>
       <p><strong>Document ID:</strong> {source.document_id}</p>
       <p><strong>Chunk ID:</strong> {source.chunk_id}</p>

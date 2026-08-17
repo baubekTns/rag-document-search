@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { DocumentSelector } from "../documents/DocumentSelector";
 import { useDocumentWorkspace } from "../../features/documents/useDocumentWorkspace";
 import { useAskQuestion } from "../../features/qa/useAskQuestion";
 import { Conversation } from "./Conversation";
@@ -26,17 +25,15 @@ export function ChatPanel() {
   };
 
   return (
-    <section>
-      <h2>Chat with Documents</h2>
-      <DocumentSelector
-        label="Question"
-        documents={workspace.documents}
-        selectedDocumentId={workspace.selectedDocumentId}
-        status={workspace.documentStatus}
-        error={workspace.documentError}
-        onSelect={workspace.setSelectedDocumentId}
-        onRetry={() => void workspace.refreshDocuments()}
-      />
+    <section className="panel chat-panel" aria-labelledby="chat-title">
+      <div className="panel-heading panel-heading-inline">
+        <div>
+          <p className="eyebrow">Ask</p>
+          <h2 id="chat-title">Ask your documents</h2>
+          <p>Get a grounded answer with the source passages used to create it.</p>
+        </div>
+        <p className="scope-pill">Scope: {workspace.scopeLabel}</p>
+      </div>
       <QuestionComposer
         question={question}
         loading={loading}
@@ -44,8 +41,9 @@ export function ChatPanel() {
         onSubmit={() => void handleAsk()}
       />
 
-      {validationMessage && <p>{validationMessage}</p>}
-      {error && <p>{error.message}</p>}
+      {validationMessage && <p className="feedback feedback-error">{validationMessage}</p>}
+      {error && <p className="feedback feedback-error">{error.message}</p>}
+      {loading && <p className="feedback feedback-loading">Reviewing your documents...</p>}
       <Conversation messages={messages} />
     </section>
   );

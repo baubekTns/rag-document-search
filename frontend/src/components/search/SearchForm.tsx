@@ -18,7 +18,7 @@ export function SearchForm({
   onSubmit,
 }: SearchFormProps) {
   return (
-    <>
+    <div className="search-form">
       <input
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
@@ -36,9 +36,9 @@ export function SearchForm({
         <option value="reranked">Reranked</option>
       </select>
 
-      <button onClick={onSubmit} disabled={loading || !query.trim()}>
+      <button className="button button-secondary" onClick={onSubmit} disabled={loading || !query.trim()}>
         {loading ? "Searching..." : "Search"}
       </button>
-    </>
+    </div>
   );
 }

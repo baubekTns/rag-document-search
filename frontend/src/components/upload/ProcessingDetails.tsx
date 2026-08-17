@@ -6,17 +6,21 @@ interface ProcessingDetailsProps {
 
 export function ProcessingDetails({ result }: ProcessingDetailsProps) {
   return (
-    <details>
+    <details className="processing-details">
       <summary>Processing details</summary>
 
       <h3>Embeddings</h3>
-      <p><strong>Embeddings:</strong> {result.embeddings.embedding_count}</p>
-      <p><strong>Model:</strong> {result.embeddings.model_name}</p>
-      <p><strong>Dimension:</strong> {result.embeddings.embedding_dimension}</p>
+      <dl className="metadata-list">
+        <div><dt>Embeddings</dt><dd>{result.embeddings.embedding_count}</dd></div>
+        <div><dt>Model</dt><dd>{result.embeddings.model_name}</dd></div>
+        <div><dt>Dimension</dt><dd>{result.embeddings.embedding_dimension}</dd></div>
+      </dl>
 
       <h3>Vector Storage</h3>
-      <p><strong>Stored vectors:</strong> {result.vector_storage.stored_vector_count}</p>
-      <p><strong>Collection:</strong> {result.vector_storage.collection_name}</p>
+      <dl className="metadata-list">
+        <div><dt>Stored vectors</dt><dd>{result.vector_storage.stored_vector_count}</dd></div>
+        <div><dt>Collection</dt><dd>{result.vector_storage.collection_name}</dd></div>
+      </dl>
     </details>
   );
 }

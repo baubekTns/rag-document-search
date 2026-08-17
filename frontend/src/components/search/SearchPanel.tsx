@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { DocumentSelector } from "../documents/DocumentSelector";
 import { useDocumentWorkspace } from "../../features/documents/useDocumentWorkspace";
 import { useDocumentSearch } from "../../features/search/useDocumentSearch";
 import type { SearchMode } from "../../types/search";
@@ -25,17 +24,15 @@ export function SearchPanel() {
   };
 
   return (
-    <section>
-      <h2>Search Documents</h2>
-      <DocumentSelector
-        label="Search"
-        documents={workspace.documents}
-        selectedDocumentId={workspace.selectedDocumentId}
-        status={workspace.documentStatus}
-        error={workspace.documentError}
-        onSelect={workspace.setSelectedDocumentId}
-        onRetry={() => void workspace.refreshDocuments()}
-      />
+    <section className="panel search-panel" aria-labelledby="search-title">
+      <div className="panel-heading panel-heading-inline">
+        <div>
+          <p className="eyebrow">Explore</p>
+          <h2 id="search-title">Search documents</h2>
+          <p>Inspect the passages that retrieval finds most relevant.</p>
+        </div>
+        <p className="scope-pill">Scope: {workspace.scopeLabel}</p>
+      </div>
       <SearchForm
         query={query}
         mode={mode}
@@ -45,8 +42,9 @@ export function SearchPanel() {
         onSubmit={() => void handleSearch()}
       />
 
-      {validationMessage && <p>{validationMessage}</p>}
-      {error && <p>{error.message}</p>}
+      {validationMessage && <p className="feedback feedback-error">{validationMessage}</p>}
+      {error && <p className="feedback feedback-error">{error.message}</p>}
+      {loading && <p className="feedback feedback-loading">Searching documents...</p>}
       {searchResult && <SearchResults result={searchResult} mode={mode} />}
     </section>
   );

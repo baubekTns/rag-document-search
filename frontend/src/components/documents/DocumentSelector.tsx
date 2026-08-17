@@ -25,9 +25,9 @@ export function DocumentSelector({
     : null;
 
   return (
-    <div>
-      <label>
-        {label} scope
+    <div className="document-selector">
+      <label className="field-label">
+        {label}
         <select
           value={selectedDocumentId ?? ""}
           onChange={(event) => onSelect(event.target.value || null)}
@@ -42,11 +42,11 @@ export function DocumentSelector({
         </select>
       </label>
 
-      <p>Active scope: {activeDocument ? activeDocument.original_filename : "All documents"}</p>
-      {status === "loading" && <p>Loading available documents...</p>}
-      {status === "success" && documents.length === 0 && <p>No documents uploaded yet.</p>}
+      <p className="scope-status">Active scope: {activeDocument ? activeDocument.original_filename : "All documents"}</p>
+      {status === "loading" && <p className="feedback feedback-loading">Loading available documents...</p>}
+      {status === "success" && documents.length === 0 && <p className="empty-state">No documents uploaded yet.</p>}
       {status === "error" && error && (
-        <p>
+        <p className="feedback feedback-error">
           {error.message} <button onClick={onRetry}>Retry</button>
         </p>
       )}

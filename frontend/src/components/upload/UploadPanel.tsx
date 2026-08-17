@@ -46,23 +46,30 @@ export function UploadPanel() {
   };
 
   return (
-    <section>
-      <h2>Upload Document</h2>
+    <section className="panel upload-panel" aria-labelledby="upload-title">
+      <div className="panel-heading">
+        <p className="eyebrow">Ingest</p>
+        <h2 id="upload-title">Upload a document</h2>
+        <p>Add a PDF to make it available across the workspace.</p>
+      </div>
 
-      <input
-        type="file"
-        accept="application/pdf,.pdf"
-        onChange={handleFileChange}
-        disabled={uploading}
-      />
+      <div className="upload-controls">
+        <input
+          type="file"
+          accept="application/pdf,.pdf"
+          onChange={handleFileChange}
+          disabled={uploading}
+        />
 
-      <button onClick={handleUpload} disabled={uploading || !selectedFile}>
-        {uploading ? "Uploading..." : "Upload"}
-      </button>
+        <button className="button button-secondary" onClick={handleUpload} disabled={uploading || !selectedFile}>
+          {uploading ? "Uploading..." : "Upload"}
+        </button>
+      </div>
 
-      {validationMessage && <p>{validationMessage}</p>}
-      {error && <p>{error.message}</p>}
-      {status === "success" && <p>PDF uploaded and chunked successfully.</p>}
+      {validationMessage && <p className="feedback feedback-error">{validationMessage}</p>}
+      {error && <p className="feedback feedback-error">{error.message}</p>}
+      {uploading && <p className="feedback feedback-loading">Processing document...</p>}
+      {status === "success" && <p className="feedback feedback-success">PDF uploaded and chunked successfully.</p>}
       {uploadResult && <UploadSummary result={uploadResult} />}
     </section>
   );

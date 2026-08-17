@@ -1,36 +1,22 @@
 import { useState } from "react";
-import { searchDocuments } from "../services/searchService";
-import type { SearchMode, SearchResponse } from "../types/search";
+import { useDocumentSearch } from "../features/search/useDocumentSearch";
+import type { SearchMode } from "../types/search";
 
 export default function DocumentSearch() {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<SearchMode>("reranked");
-  const [searchResult, setSearchResult] = useState<SearchResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [validationMessage, setValidationMessage] = useState("");
+  const { data: searchResult, error, status, execute } = useDocumentSearch();
+  const loading = status === "loading";
 
   const handleSearch = async () => {
     if (!query.trim()) {
-      setMessage("Please enter a search query.");
+      setValidationMessage("Please enter a search query.");
       return;
     }
 
-    try {
-      setLoading(true);
-      setMessage("");
-      setSearchResult(null);
-
-      const result = await searchDocuments(query.trim(), mode);
-
-      setSearchResult(result);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Search failed.";
-
-      setMessage(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    setValidationMessage("");
+    await execute(query.trim(), mode);
   };
 
   return (
@@ -58,7 +44,8 @@ export default function DocumentSearch() {
         {loading ? "Searching..." : "Search"}
       </button>
 
-      {message && <p>{message}</p>}
+      {validationMessage && <p>{validationMessage}</p>}
+      {error && <p>{error.message}</p>}
 
       {searchResult && (
         <div>

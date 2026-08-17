@@ -1,48 +1,24 @@
 import { useState } from "react";
-import { askQuestion } from "../services/qaService";
-import type { ChatMessage } from "../types/chat";
+import { useAskQuestion } from "../features/qa/useAskQuestion";
 import CitationViewer from "./CitationViewer";
-
-function createMessageId() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
 
 export default function ChatInterface() {
   const [question, setQuestion] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [validationMessage, setValidationMessage] = useState("");
+  const { messages, error, status, execute } = useAskQuestion();
+  const loading = status === "loading";
 
   const handleAsk = async () => {
     const trimmedQuestion = question.trim();
 
     if (!trimmedQuestion) {
-      setMessage("Please enter a question.");
+      setValidationMessage("Please enter a question.");
       return;
     }
 
-    try {
-      setLoading(true);
-      setMessage("");
-      setQuestion("");
-
-      const response = await askQuestion(trimmedQuestion, 2);
-
-      const chatMessage: ChatMessage = {
-        id: createMessageId(),
-        question: trimmedQuestion,
-        response,
-      };
-
-      setMessages((currentMessages) => [chatMessage, ...currentMessages]);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to answer question.";
-
-      setMessage(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    setValidationMessage("");
+    setQuestion("");
+    await execute(trimmedQuestion);
   };
 
   return (
@@ -63,7 +39,8 @@ export default function ChatInterface() {
         {loading ? "Answering..." : "Ask"}
       </button>
 
-      {message && <p>{message}</p>}
+      {validationMessage && <p>{validationMessage}</p>}
+      {error && <p>{error.message}</p>}
 
       <div>
         {messages.length === 0 ? (

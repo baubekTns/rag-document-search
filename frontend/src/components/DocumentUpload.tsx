@@ -1,21 +1,20 @@
 import { useState } from "react";
-import { uploadDocument } from "../services/documentService";
-import type { UploadResponse } from "../types/document";
+import { useUploadDocument } from "../features/upload/useUploadDocument";
 
 export default function DocumentUpload() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [uploadResult, setUploadResult] = useState<UploadResponse | null>(null);
+  const [validationMessage, setValidationMessage] = useState("");
+  const { data: uploadResult, error, status, execute, reset } = useUploadDocument();
+  const uploading = status === "loading";
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
-    setUploadResult(null);
+    reset();
 
     if (!file) {
       setSelectedFile(null);
-      setMessage("");
+      setValidationMessage("");
       return;
     }
 
@@ -24,39 +23,22 @@ export default function DocumentUpload() {
       !file.name.toLowerCase().endsWith(".pdf")
     ) {
       setSelectedFile(null);
-      setMessage("Please select a PDF file.");
+      setValidationMessage("Please select a PDF file.");
       return;
     }
 
     setSelectedFile(file);
-    setMessage("");
+    setValidationMessage("");
   };
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      setMessage("Please select a PDF file first.");
+      setValidationMessage("Please select a PDF file first.");
       return;
     }
 
-    try {
-      setUploading(true);
-      setMessage("");
-      setUploadResult(null);
-
-      const result = await uploadDocument(selectedFile);
-
-      setUploadResult(result);
-      setMessage("PDF uploaded and chunked successfully.");
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Upload failed. Please try again.";
-
-      setMessage(errorMessage);
-    } finally {
-      setUploading(false);
-    }
+    setValidationMessage("");
+    await execute(selectedFile);
   };
 
   return (
@@ -74,7 +56,9 @@ export default function DocumentUpload() {
         {uploading ? "Uploading..." : "Upload"}
       </button>
 
-      {message && <p>{message}</p>}
+      {validationMessage && <p>{validationMessage}</p>}
+      {error && <p>{error.message}</p>}
+      {status === "success" && <p>PDF uploaded and chunked successfully.</p>}
 
       {uploadResult && (
         <div>

@@ -4,7 +4,7 @@ export interface AnswerQuality {
   top_rerank_score: number;
   top_semantic_score: number;
   top_lexical_score: number;
-  thresholds: {
+  thresholds?: {
     min_top_rerank_score: number;
     min_top_semantic_score: number;
     min_lexical_score: number;
@@ -17,9 +17,9 @@ export interface AnswerSource {
   chunk_id: string;
   chunk_index: number;
   preview: string;
-  rerank_score: number;
-  semantic_score: number;
-  keyword_match: boolean;
+  rerank_score: number | null;
+  semantic_score: number | null;
+  keyword_match: boolean | null;
 }
 
 export interface QaAnswerResponse {

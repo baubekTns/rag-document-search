@@ -4,6 +4,12 @@ interface CitationViewerProps {
   sources: AnswerSource[];
 }
 
+function formatScore(score: unknown): string {
+  return typeof score === "number" && Number.isFinite(score)
+    ? score.toFixed(3)
+    : "Not available";
+}
+
 export default function CitationViewer({ sources }: CitationViewerProps) {
   if (sources.length === 0) {
     return <p>No sources returned.</p>;
@@ -32,11 +38,11 @@ export default function CitationViewer({ sources }: CitationViewerProps) {
           </p>
 
           <p>
-            <strong>Rerank score:</strong> {source.rerank_score.toFixed(3)}
+            <strong>Rerank score:</strong> {formatScore(source.rerank_score)}
           </p>
 
           <p>
-            <strong>Semantic score:</strong> {source.semantic_score.toFixed(3)}
+            <strong>Semantic score:</strong> {formatScore(source.semantic_score)}
           </p>
 
           <p>

@@ -30,10 +30,6 @@ export interface UploadResponse {
   text_preview: string;
 }
 
-export interface ApiErrorResponse {
-  detail?: string;
-}
-
 export interface VectorStorageMetadata {
   stored_vector_count: number;
   collection_name: string;

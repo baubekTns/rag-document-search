@@ -15,6 +15,7 @@ def _cors_origins(value: str) -> tuple[str, ...]:
 class Settings:
     sqlite_database_path: Path
     upload_directory: Path
+    upload_staging_directory: Path
     max_upload_size_bytes: int
     cors_origins: tuple[str, ...]
     qdrant_url: str
@@ -27,9 +28,13 @@ class Settings:
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
+    upload_directory = Path(os.getenv("UPLOAD_DIRECTORY", "uploads"))
     return Settings(
         sqlite_database_path=Path(os.getenv("SQLITE_DATABASE_PATH", "data/documents.db")),
-        upload_directory=Path(os.getenv("UPLOAD_DIRECTORY", "uploads")),
+        upload_directory=upload_directory,
+        upload_staging_directory=Path(
+            os.getenv("UPLOAD_STAGING_DIRECTORY", str(upload_directory / ".staging"))
+        ),
         max_upload_size_bytes=int(os.getenv("MAX_UPLOAD_SIZE_BYTES", str(10 * 1024 * 1024))),
         cors_origins=_cors_origins(os.getenv("CORS_ORIGINS", "http://localhost:5173")),
         qdrant_url=os.getenv("QDRANT_URL", "http://localhost:6333"),

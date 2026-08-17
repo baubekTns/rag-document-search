@@ -47,6 +47,7 @@ class DocumentMetadata(BaseModel):
     page_count: int
     character_count: int
     uploaded_at: str
+    processing_status: str
 
 
 class DocumentsResponse(BaseModel):

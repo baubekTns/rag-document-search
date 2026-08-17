@@ -2,7 +2,7 @@ from typing import Any
 from app.core.exceptions import VectorStoreError
 from app.core.settings import get_settings
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, PointStruct, VectorParams
+from qdrant_client.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, VectorParams
 
 
 QDRANT_URL = get_settings().qdrant_url
@@ -94,6 +94,35 @@ def store_chunk_vectors(
         )
 
 
+def document_vector_filter(document_id: str) -> Filter:
+    return Filter(
+        must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))]
+    )
+
+
+def delete_document_vectors(document_id: str) -> None:
+    """Idempotently remove every vector belonging to a document."""
+    try:
+        get_qdrant_client().delete(
+            collection_name=QDRANT_COLLECTION_NAME,
+            points_selector=document_vector_filter(document_id),
+        )
+    except Exception as error:
+        raise VectorStoreError(f"Failed to delete document vectors: {error}")
+
+
+def count_document_vectors(document_id: str) -> int:
+    try:
+        result = get_qdrant_client().count(
+            collection_name=QDRANT_COLLECTION_NAME,
+            count_filter=document_vector_filter(document_id),
+            exact=True,
+        )
+        return result.count
+    except Exception as error:
+        raise VectorStoreError(f"Failed to count document vectors: {error}")
+
+
 def search_similar_chunks(
     *,
     query_embedding: list[float],
@@ -105,16 +134,7 @@ def search_similar_chunks(
     query_filter = None
 
     if document_id is not None:
-        from qdrant_client.models import FieldCondition, Filter, MatchValue
-
-        query_filter = Filter(
-            must=[
-                FieldCondition(
-                    key="document_id",
-                    match=MatchValue(value=document_id),
-                )
-            ]
-        )
+        query_filter = document_vector_filter(document_id)
 
     try:
         search_response = client.query_points(

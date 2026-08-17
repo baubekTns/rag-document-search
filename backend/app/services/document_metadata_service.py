@@ -19,7 +19,9 @@ def initialize_document_metadata_table(connection: sqlite3.Connection | None = N
                 file_size INTEGER NOT NULL,
                 page_count INTEGER NOT NULL,
                 character_count INTEGER NOT NULL,
-                uploaded_at TEXT NOT NULL
+                uploaded_at TEXT NOT NULL,
+                processing_status TEXT NOT NULL DEFAULT 'ready'
+                    CHECK (processing_status IN ('processing', 'ready', 'failed'))
             )
             """
     )
@@ -34,6 +36,7 @@ def create_document_metadata(
     file_size: int,
     page_count: int,
     character_count: int,
+    processing_status: str = "ready",
     connection: sqlite3.Connection | None = None,
 ) -> dict[str, Any]:
     uploaded_at = datetime.now(timezone.utc).isoformat()
@@ -43,7 +46,8 @@ def create_document_metadata(
             return create_document_metadata(
                 document_id=document_id, original_filename=original_filename,
                 stored_filename=stored_filename, content_type=content_type, file_size=file_size,
-                page_count=page_count, character_count=character_count, connection=transaction_connection,
+                page_count=page_count, character_count=character_count,
+                processing_status=processing_status, connection=transaction_connection,
             )
     connection.execute(
             """
@@ -55,9 +59,10 @@ def create_document_metadata(
                 file_size,
                 page_count,
                 character_count,
-                uploaded_at
+                uploaded_at,
+                processing_status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 document_id,
@@ -68,6 +73,7 @@ def create_document_metadata(
                 page_count,
                 character_count,
                 uploaded_at,
+                processing_status,
             ),
     )
 
@@ -80,6 +86,7 @@ def create_document_metadata(
         "page_count": page_count,
         "character_count": character_count,
         "uploaded_at": uploaded_at,
+        "processing_status": processing_status,
     }
 
 
@@ -95,7 +102,8 @@ def list_document_metadata() -> list[dict[str, Any]]:
                 file_size,
                 page_count,
                 character_count,
-                uploaded_at
+                uploaded_at,
+                processing_status
             FROM documents
             ORDER BY uploaded_at DESC
             """
@@ -116,7 +124,8 @@ def get_document_metadata(document_id: str) -> dict[str, Any] | None:
                 file_size,
                 page_count,
                 character_count,
-                uploaded_at
+                uploaded_at,
+                processing_status
             FROM documents
             WHERE id = ?
             """,
@@ -127,3 +136,22 @@ def get_document_metadata(document_id: str) -> dict[str, Any] | None:
         return None
 
     return dict(row)
+
+
+def update_document_processing_status(document_id: str, status: str) -> None:
+    with transaction() as connection:
+        connection.execute(
+            "UPDATE documents SET processing_status = ? WHERE id = ?",
+            (status, document_id),
+        )
+
+
+def delete_document_records(document_id: str, connection: sqlite3.Connection | None = None) -> None:
+    if connection is None:
+        with transaction() as transaction_connection:
+            delete_document_records(document_id, transaction_connection)
+        return
+    connection.execute("DELETE FROM chunk_embeddings WHERE document_id = ?", (document_id,))
+    connection.execute("DELETE FROM document_chunks_fts WHERE document_id = ?", (document_id,))
+    connection.execute("DELETE FROM document_chunks WHERE document_id = ?", (document_id,))
+    connection.execute("DELETE FROM documents WHERE id = ?", (document_id,))

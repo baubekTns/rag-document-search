@@ -84,6 +84,41 @@ def test_extraction_failure_removes_staged_state(monkeypatch):
     assert not (get_settings().upload_staging_directory / "document-1.part").exists()
 
 
+def test_chunking_failure_removes_staged_state(monkeypatch):
+    monkeypatch.setattr(document_ingestion_service, "extract_pdf_text", _extraction)
+    monkeypatch.setattr(
+        document_ingestion_service,
+        "chunk_page_texts",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("chunking failed")),
+    )
+
+    with pytest.raises(RuntimeError, match="chunking failed"):
+        _ingest()
+
+    assert get_document_metadata("document-1") is None
+    assert not (get_settings().upload_staging_directory / "document-1.part").exists()
+
+
+def test_embedding_failure_removes_staged_state(monkeypatch):
+    monkeypatch.setattr(document_ingestion_service, "extract_pdf_text", _extraction)
+    monkeypatch.setattr(
+        document_ingestion_service,
+        "chunk_page_texts",
+        lambda *_args, **_kwargs: [{"text": "Example text", "page_start": 1, "page_end": 1}],
+    )
+    monkeypatch.setattr(
+        document_ingestion_service,
+        "generate_embeddings",
+        lambda _: (_ for _ in ()).throw(RuntimeError("embedding failed")),
+    )
+
+    with pytest.raises(RuntimeError, match="embedding failed"):
+        _ingest()
+
+    assert get_document_metadata("document-1") is None
+    assert not (get_settings().upload_staging_directory / "document-1.part").exists()
+
+
 def test_sqlite_persistence_failure_rolls_back_and_cleans_up(monkeypatch):
     _configure_success(monkeypatch)
     monkeypatch.setattr(
